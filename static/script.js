@@ -56,6 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
     updatePointsUI();
     updateCartUI();
     renderGrids();
+    renderHomeCatalog();
     initCheckoutPanel();
     initLegalModals(); // Инициализация правовых документов
 });
@@ -209,6 +210,60 @@ function renderGrids() {
                 </div>`;
         });
     }
+}
+
+function renderHomeCatalog() {
+    const tabsContainer = document.getElementById('homeCatalogTabs');
+    const slider = document.getElementById('homeCatalogSlider');
+    if (!tabsContainer || !slider) return;
+
+    const categories = ['ВСЕ', ...new Set(productsDB.map(product => product.cat))];
+    const activeCategory = tabsContainer.dataset.activeCategory || 'ВСЕ';
+
+    tabsContainer.innerHTML = categories.map(category => `
+        <button class="home-catalog-tab ${category === activeCategory ? 'active' : ''}" data-category="${category}">${category}</button>
+    `).join('');
+
+    const filteredProducts = activeCategory === 'ВСЕ'
+        ? productsDB
+        : productsDB.filter(product => product.cat === activeCategory);
+
+    slider.innerHTML = `
+        <div class="home-catalog-track">
+            ${filteredProducts.map(product => `
+                <article class="product-card home-catalog-card">
+                    <button class="wishlist-btn" onclick="showToast('Добавлено в избранное', 'success', 'fa-heart')"><i class="fa-regular fa-heart"></i></button>
+                    <div class="product-image" onclick="openDetailModal('product', ${product.id})">
+                        <img src="${product.img}" alt="${product.name}" onerror="this.src='https://via.placeholder.com/400x400/f4f5f7/cccccc?text=ТОВАР'">
+                    </div>
+                    <div class="product-meta">
+                        <h3 class="product-title">${product.name}</h3>
+                        <p class="product-desc">${product.cat}</p>
+                        <div class="product-price">${product.price.toLocaleString()} ₽</div>
+                    </div>
+                    <div class="product-action home-catalog-action">
+                        <button class="add-cart-btn" onclick="addToCart('${product.name}', ${product.price})">В корзину</button>
+                    </div>
+                </article>
+            `).join('')}
+        </div>
+    `;
+
+    tabsContainer.querySelectorAll('.home-catalog-tab').forEach(button => {
+        button.addEventListener('click', () => {
+            tabsContainer.dataset.activeCategory = button.dataset.category;
+            renderHomeCatalog();
+        });
+    });
+
+    updateHomeCatalogSummary();
+}
+
+function updateHomeCatalogSummary() {
+    const sumNode = document.getElementById('homeCatalogCartSum');
+    if (!sumNode) return;
+    const sum = cart.reduce((acc, item) => acc + item.price, 0);
+    sumNode.innerText = `${sum.toLocaleString()} ₽`;
 }
 
 function ensureModalExists() {
@@ -632,6 +687,7 @@ function updateCartUI() {
         });
     }
     total.innerText = sum.toLocaleString() + ' ₽';
+    updateHomeCatalogSummary();
 }
 
 function addToCart(name, price) {
