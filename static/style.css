@@ -1061,9 +1061,14 @@ a:hover, button:hover, .product-card:hover, .logo:hover, .nav-link:hover, .theme
 .home-catalog-tabs {
     display: flex;
     gap: 12px;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 10px;
     margin-bottom: 24px;
+    scrollbar-width: thin;
 }
+.home-catalog-tabs::-webkit-scrollbar { height: 8px; }
+.home-catalog-tabs::-webkit-scrollbar-thumb { background: rgba(127, 127, 127, 0.35); border-radius: 999px; }
 
 .home-catalog-tab {
     border: 1px solid var(--border-color);
@@ -1076,6 +1081,8 @@ a:hover, button:hover, .product-card:hover, .logo:hover, .nav-link:hover, .theme
     letter-spacing: 0.08em;
     text-transform: uppercase;
     cursor: pointer;
+    white-space: nowrap;
+    flex: 0 0 auto;
 }
 
 .home-catalog-tab.active,
