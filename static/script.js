@@ -35,8 +35,9 @@ const carDB = {
 let userPoints = parseInt(localStorage.getItem('williPoints')) || 500;
 let cart = JSON.parse(localStorage.getItem('williCart')) || [];
 let checkoutFormState = JSON.parse(localStorage.getItem('williCheckoutForm') || '{}');
-let pickupMap = null;
-let pickupCollection = null;
+let map = null;
+let myPlacemark = null;
+let pvzCollection = null;
 let yandexMapsLoader = null;
 const pickupProviders = {
     yandex: { label: 'Яндекс Маркет', query: 'Яндекс Маркет пункт выдачи', accent: '#FC3F1D' },
@@ -359,49 +360,57 @@ function initCheckoutPanel() {
         <div class="cart-form-grid">
             <div class="cart-form-field">
                 <label for="checkoutName">ФИО</label>
-                <input id="checkoutName" class="cart-form-input" type="text" placeholder="Иванов Иван Иванович" value="${checkoutFormState.name || ''}">
+                <input id="checkoutName" class="cart-form-input" data-checkout-field="name" type="text" placeholder="Иванов Иван Иванович" value="${checkoutFormState.name || ''}">
             </div>
             <div class="cart-form-field">
                 <label for="checkoutPhone">Телефон</label>
-                <input id="checkoutPhone" class="cart-form-input" type="tel" placeholder="+7 (999) 123-45-67" value="${checkoutFormState.phone || ''}">
+                <input id="checkoutPhone" class="cart-form-input" data-checkout-field="phone" type="tel" placeholder="+7 (999) 123-45-67" value="${checkoutFormState.phone || ''}">
             </div>
             <div class="cart-form-field">
                 <label for="checkoutEmail">Email</label>
-                <input id="checkoutEmail" class="cart-form-input" type="email" placeholder="name@email.com" value="${checkoutFormState.email || ''}">
+                <input id="checkoutEmail" class="cart-form-input" data-checkout-field="email" type="email" placeholder="name@email.com" value="${checkoutFormState.email || ''}">
             </div>
-            <div class="cart-form-field">
-                <label for="checkoutAddress">Адрес</label>
-                <input id="checkoutAddress" class="cart-form-input" type="text" placeholder="Название ПВЗ: адрес" value="${checkoutFormState.address || ''}">
+            <div class="cart-form-field cart-form-field-address">
+                <label for="address">Адрес</label>
+                <input id="address" class="cart-form-input" data-checkout-field="address" type="text" placeholder="Название ПВЗ: адрес" value="${checkoutFormState.address || ''}" autocomplete="off">
+                <div id="suggestions-container" class="suggestions-container"></div>
             </div>
         </div>
         <div class="pickup-map-block">
             <div class="pickup-map-header">
-                <div>Выберите службу доставки и пункт выдачи на карте</div>
-                <span id="pickupMapStatus" class="pickup-map-status">Нажмите на службу доставки</span>
+                <div>Выберите адрес на карте или найдите ПВЗ</div>
+                <span id="pickupMapStatus" class="pickup-map-status">Кликните по карте, введите адрес или нажмите на службу доставки</span>
             </div>
             <div id="pickupProviderButtons" class="pickup-provider-buttons">
-                <button type="button" class="pickup-provider-btn" data-provider="yandex">Яндекс Маркет</button>
-                <button type="button" class="pickup-provider-btn" data-provider="post">Почта России</button>
-                <button type="button" class="pickup-provider-btn" data-provider="cdek">СДЭК</button>
+                <button type="button" class="pickup-provider-btn" onclick="loadPVZ('yandex')">Яндекс Маркет</button>
+                <button type="button" class="pickup-provider-btn" onclick="loadPVZ('pochta')">Почта России</button>
+                <button type="button" class="pickup-provider-btn" onclick="loadPVZ('sdek')">СДЭК</button>
             </div>
-            <div id="pickupMap" class="pickup-map"></div>
+            <div id="map" class="pickup-map"></div>
         </div>
     `;
 
     list.insertAdjacentElement('afterend', panel);
 
-    ['name', 'phone', 'email', 'address'].forEach(field => {
-        const input = document.getElementById(`checkout${field.charAt(0).toUpperCase()}${field.slice(1)}`);
-        if (!input) return;
+    document.querySelectorAll('[data-checkout-field]').forEach(input => {
         input.addEventListener('input', event => {
-            checkoutFormState[field] = event.target.value;
+            checkoutFormState[event.target.dataset.checkoutField] = event.target.value;
             localStorage.setItem('williCheckoutForm', JSON.stringify(checkoutFormState));
+            validateCheckout();
         });
     });
 
-    document.querySelectorAll('.pickup-provider-btn').forEach(btn => {
-        btn.addEventListener('click', () => loadPickupPoints(btn.dataset.provider));
-    });
+    loadYandexMaps()
+        .then(ymaps => ymaps.ready(initMap))
+        .catch(error => {
+            console.error(error);
+            const status = document.getElementById('pickupMapStatus');
+            if (status) status.textContent = 'Не удалось загрузить Яндекс Карты.';
+        });
+}
+
+function validateCheckout() {
+    localStorage.setItem('williCheckoutForm', JSON.stringify(checkoutFormState));
 }
 
 async function loadYandexMaps() {
@@ -420,7 +429,7 @@ async function loadYandexMaps() {
 
                 const script = document.createElement('script');
                 script.src = `https://api-maps.yandex.ru/2.1/?apikey=${apiKey}&lang=ru_RU`;
-                script.onload = () => window.ymaps.ready(() => resolve(window.ymaps));
+                script.onload = () => resolve(window.ymaps);
                 script.onerror = () => reject(new Error('Yandex Maps script failed to load'));
                 document.head.appendChild(script);
             }));
@@ -428,84 +437,179 @@ async function loadYandexMaps() {
     return yandexMapsLoader;
 }
 
-function getPickupSearchContext() {
-    const address = document.getElementById('checkoutAddress')?.value?.trim();
-    if (address) return address;
-    return LEGAL_INFO.address;
-}
+function initMap() {
+    if (map) return;
 
-async function loadPickupPoints(providerKey) {
-    const provider = pickupProviders[providerKey];
+    const mapContainer = document.getElementById('map');
+    const addressInput = document.getElementById('address');
+    const suggestionsContainer = document.getElementById('suggestions-container');
     const status = document.getElementById('pickupMapStatus');
-    if (!provider || !status) return;
 
-    document.querySelectorAll('.pickup-provider-btn').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.provider === providerKey);
+    if (!mapContainer || !addressInput || typeof ymaps === 'undefined') return;
+
+    map = new ymaps.Map('map', {
+        center: [55.755864, 37.617698],
+        zoom: 4,
+        controls: ['zoomControl', 'fullscreenControl']
     });
 
-    status.textContent = `Ищем 10 точек: ${provider.label}...`;
+    pvzCollection = new ymaps.GeoObjectCollection();
 
-    try {
-        const ymaps = await loadYandexMaps();
-        const searchContext = getPickupSearchContext();
-
-        if (!pickupMap) {
-            pickupMap = new ymaps.Map('pickupMap', {
-                center: [55.751244, 37.618423],
-                zoom: 10,
-                controls: ['zoomControl']
-            });
-            pickupCollection = new ymaps.GeoObjectCollection();
-            pickupMap.geoObjects.add(pickupCollection);
+    ymaps.geolocation.get({ provider: 'yandex', mapStateAutoApply: true }).then(function(result) {
+        result.geoObjects.options.set('preset', 'islands#blueCircleIcon');
+        const bounds = result.geoObjects.get(0)?.properties.get('boundedBy');
+        if (bounds) {
+            map.setBounds(bounds, { checkZoomRange: true });
+        } else {
+            const coords = result.geoObjects.get(0)?.geometry.getCoordinates();
+            if (coords) map.setCenter(coords, 12);
         }
+    }).catch(() => {});
 
-        pickupCollection.removeAll();
+    map.events.add('click', function(e) {
+        const coords = e.get('coords');
+        setPlacemark(coords);
+        getAddress(coords);
+    });
 
-        const result = await ymaps.geocode(`${provider.query}, ${searchContext}`, { results: 10 });
-        const geoObjects = result.geoObjects.toArray();
+    addressInput.addEventListener('input', function() {
+        const query = addressInput.value;
+        checkoutFormState.address = query;
+        validateCheckout();
 
-        if (!geoObjects.length) {
-            status.textContent = `Не нашли точки для службы «${provider.label}». Попробуйте уточнить адрес.`;
+        if (query.length < 3) {
+            suggestionsContainer.innerHTML = '';
+            suggestionsContainer.style.display = 'none';
             return;
         }
 
-        const bounds = [];
-        geoObjects.forEach((geoObject, index) => {
-            const meta = geoObject.properties.get('metaDataProperty') || {};
-            const geocoderMeta = meta.GeocoderMetaData || {};
-            const address = geocoderMeta.text || geoObject.getAddressLine() || 'Адрес не указан';
-            const title = geoObject.properties.get('name') || provider.label;
-            const coords = geoObject.geometry.getCoordinates();
-            bounds.push(coords);
+        ymaps.suggest(query).then(function(items) {
+            suggestionsContainer.innerHTML = '';
+            if (items.length > 0) {
+                suggestionsContainer.style.display = 'block';
+                items.forEach(function(item) {
+                    const div = document.createElement('div');
+                    div.className = 'suggestion-item';
+                    div.textContent = item.displayName;
 
+                    div.onclick = function() {
+                        addressInput.value = item.value;
+                        checkoutFormState.address = item.value;
+                        suggestionsContainer.style.display = 'none';
+                        validateCheckout();
+
+                        ymaps.geocode(item.value).then(res => {
+                            const firstGeoObject = res.geoObjects.get(0);
+                            if (firstGeoObject) {
+                                const coords = firstGeoObject.geometry.getCoordinates();
+                                map.setCenter(coords, 15);
+                                setPlacemark(coords);
+                            }
+                        });
+                    };
+                    suggestionsContainer.appendChild(div);
+                });
+            } else {
+                suggestionsContainer.style.display = 'none';
+            }
+        });
+    });
+
+    document.addEventListener('click', function(event) {
+        if (!suggestionsContainer.contains(event.target) && event.target !== addressInput) {
+            suggestionsContainer.style.display = 'none';
+        }
+    });
+
+    if (status) status.textContent = 'Карта готова: выберите точку на карте или найдите ПВЗ';
+}
+
+function setPlacemark(coords) {
+    if (!map) return;
+
+    if (myPlacemark) {
+        myPlacemark.geometry.setCoordinates(coords);
+    } else {
+        myPlacemark = new ymaps.Placemark(coords, {}, {
+            preset: 'islands#violetDotIconWithCaption',
+            draggable: true
+        });
+        map.geoObjects.add(myPlacemark);
+        myPlacemark.events.add('dragend', function() {
+            getAddress(myPlacemark.geometry.getCoordinates());
+        });
+    }
+}
+
+function getAddress(coords) {
+    const addressInput = document.getElementById('address');
+    const status = document.getElementById('pickupMapStatus');
+    if (!myPlacemark || !addressInput) return;
+
+    myPlacemark.properties.set('iconCaption', 'поиск...');
+    ymaps.geocode(coords).then(function(res) {
+        const firstGeoObject = res.geoObjects.get(0);
+        if (!firstGeoObject) return;
+        const address = firstGeoObject.getAddressLine();
+        addressInput.value = address;
+        checkoutFormState.address = address;
+        addressInput.dispatchEvent(new Event('input'));
+        myPlacemark.properties.set({
+            iconCaption: firstGeoObject.properties.get('name'),
+            balloonContent: address
+        });
+        if (status) status.textContent = `Выбран адрес: ${address}`;
+    });
+}
+
+window.loadPVZ = function(type) {
+    const addressInput = document.getElementById('address');
+    const status = document.getElementById('pickupMapStatus');
+    if (!map || !addressInput || typeof ymaps === 'undefined') return;
+
+    map.geoObjects.remove(pvzCollection);
+    pvzCollection = new ymaps.GeoObjectCollection();
+
+    let query, presetColor, label;
+    if (type === 'sdek') { query = 'СДЭК'; presetColor = 'islands#greenDotIconWithCaption'; label = 'СДЭК'; }
+    else if (type === 'pochta') { query = 'Почта России'; presetColor = 'islands#blueDotIconWithCaption'; label = 'Почта России'; }
+    else { query = 'Яндекс Маркет'; presetColor = 'islands#redDotIconWithCaption'; label = 'Яндекс Маркет'; }
+
+    document.querySelectorAll('.pickup-provider-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.textContent.trim() === label);
+    });
+
+    if (status) status.textContent = `Ищем пункты выдачи: ${label}...`;
+
+    ymaps.search(query, { boundedBy: map.getBounds(), strictBounds: false, results: 10 }).then(function(res) {
+        res.geoObjects.each(function(obj) {
+            const title = obj.properties.get('name') || label;
+            const address = obj.properties.get('description') || title;
+            const coords = obj.geometry.getCoordinates();
             const placemark = new ymaps.Placemark(coords, {
-                balloonContentHeader: title,
-                balloonContentBody: address,
-                hintContent: `${index + 1}. ${title}`
-            }, {
-                preset: 'islands#redStretchyIcon',
-                iconColor: provider.accent
+                balloonContent: address,
+                iconCaption: title
+            }, { preset: presetColor });
+
+            placemark.events.add('click', function() {
+                addressInput.value = `${title}: ${address}`;
+                checkoutFormState.address = addressInput.value;
+                validateCheckout();
+                if (status) status.textContent = `Выбран пункт выдачи: ${title}`;
             });
 
-            placemark.events.add('click', () => {
-                const addressInput = document.getElementById('checkoutAddress');
-                if (addressInput) {
-                    addressInput.value = `${title}: ${address}`;
-                    checkoutFormState.address = addressInput.value;
-                    localStorage.setItem('williCheckoutForm', JSON.stringify(checkoutFormState));
-                }
-                status.textContent = `Выбран пункт выдачи: ${title}`;
-            });
-
-            pickupCollection.add(placemark);
+            pvzCollection.add(placemark);
         });
 
-        pickupMap.setBounds(pickupCollection.getBounds(), { checkZoomRange: true, zoomMargin: 20 });
-        status.textContent = `Показаны 10 ближайших точек: ${provider.label}. Кликните по маркеру, чтобы вставить адрес.`;
-    } catch (error) {
-        console.error(error);
-        status.textContent = 'Не удалось загрузить карту. Проверьте ключ Яндекс Карт.';
-    }
+        map.geoObjects.add(pvzCollection);
+
+        if (pvzCollection.getLength() > 0) {
+            map.setBounds(pvzCollection.getBounds(), { checkZoomRange: true, zoomMargin: 20 });
+            if (status) status.textContent = `Показаны пункты выдачи: ${label}. Нажмите на маркер.`;
+        } else if (status) {
+            status.textContent = `В видимой области карты не найдено пунктов «${label}». Переместите карту и попробуйте снова.`;
+        }
+    });
 }
 
 function updateCartUI() {

@@ -1009,3 +1009,38 @@ a:hover, button:hover, .product-card:hover, .logo:hover, .nav-link:hover, .theme
         height: 240px;
     }
 }
+
+.suggestions-container {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    display: none;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.12);
+    overflow: hidden;
+    z-index: 12;
+}
+
+.cart-form-field-address {
+    position: relative;
+}
+
+.suggestion-item {
+    padding: 12px 14px;
+    font-size: 13px;
+    color: var(--text-main);
+    cursor: pointer;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--bg-card);
+}
+
+.suggestion-item:last-child {
+    border-bottom: none;
+}
+
+.suggestion-item:hover {
+    background: var(--border-color);
+}
