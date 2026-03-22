@@ -7,6 +7,12 @@ from datetime import datetime
 from yookassa import Configuration, Payment
 import uuid
 import re
+import time
+import json
+import logging
+from urllib.parse import urljoin
+from xml.etree import ElementTree as ET
+from bs4 import BeautifulSoup
 
 dotenv.load_dotenv()
 
@@ -17,6 +23,178 @@ THREAD_ID = os.getenv('THREAD_ID')
 Configuration.configure(os.getenv('SHOP_ID'), os.getenv('YOOKASSA_SECRET_KEY'))
 
 application = Flask(__name__)
+
+EXTERNAL_PRODUCTS_CACHE = {"data": [], "expires_at": 0}
+if not logging.getLogger().handlers:
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
+SCRAPER_LOGGER = logging.getLogger("external_products")
+
+
+def _fetch_url(url, timeout=20):
+    SCRAPER_LOGGER.info("Fetching URL: %s", url)
+    response = requests.get(url, timeout=timeout, headers={"User-Agent": "Mozilla/5.0"})
+    response.raise_for_status()
+    SCRAPER_LOGGER.info("Fetched URL: %s (status=%s, bytes=%s)", url, response.status_code, len(response.text))
+    return response.text
+
+
+def _extract_price(soup):
+    for script in soup.find_all('script', type='application/ld+json'):
+        try:
+            payload = json.loads(script.string or '')
+        except Exception:
+            continue
+
+        items = payload if isinstance(payload, list) else [payload]
+        for item in items:
+            if not isinstance(item, dict):
+                continue
+            offers = item.get('offers')
+            if isinstance(offers, dict) and offers.get('price'):
+                price = str(offers['price'])
+                digits = re.sub(r'[^\d.]', '', price)
+                if digits:
+                    return int(float(digits))
+
+    text = soup.get_text(' ', strip=True)
+    match = re.search(r'(?:от\s*)?([\d\s]{2,})\s*₽', text)
+    if match:
+        return int(re.sub(r'\D', '', match.group(1)))
+    return None
+
+
+def _extract_product(url, source_name, fallback_category):
+    SCRAPER_LOGGER.info("Parsing product page: %s (%s)", url, source_name)
+    html = _fetch_url(url)
+    soup = BeautifulSoup(html, 'html.parser')
+
+    title = None
+    og_title = soup.find('meta', attrs={'property': 'og:title'})
+    if og_title and og_title.get('content'):
+        title = og_title['content'].strip()
+    if not title and soup.find('h1'):
+        title = soup.find('h1').get_text(' ', strip=True)
+    if not title:
+        SCRAPER_LOGGER.warning("Skip product without title: %s", url)
+        return None
+
+    image = None
+    og_image = soup.find('meta', attrs={'property': 'og:image'})
+    if og_image and og_image.get('content'):
+        image = og_image['content'].strip()
+    elif soup.find('img') and soup.find('img').get('src'):
+        image = urljoin(url, soup.find('img')['src'])
+
+    description = None
+    og_desc = soup.find('meta', attrs={'property': 'og:description'})
+    if og_desc and og_desc.get('content'):
+        description = og_desc['content'].strip()
+    if not description:
+        p = soup.find('p')
+        if p:
+            description = p.get_text(' ', strip=True)
+
+    category = fallback_category
+    breadcrumbs = soup.select('[class*=breadcrumb] a, .breadcrumbs a, .breadcrumb a')
+    if breadcrumbs:
+        category = breadcrumbs[-1].get_text(' ', strip=True) or fallback_category
+
+    price = _extract_price(soup)
+    if not price:
+        SCRAPER_LOGGER.warning("Skip product without price: %s", url)
+        return None
+
+    slug = re.sub(r'[^a-z0-9]+', '-', title.lower()).strip('-')
+    SCRAPER_LOGGER.info("Parsed product: %s | %s ₽ | %s", title, price, source_name)
+    return {
+        'id': f'ext-{source_name.lower()}-{slug}',
+        'name': title,
+        'cat': f'{source_name} / {category}',
+        'price': price,
+        'img': image or '/img/part_1.png',
+        'desc': description or f'Товар {source_name}',
+        'badges': [source_name, 'Внешний каталог'],
+        'source_url': url,
+        'source': source_name
+    }
+
+
+def _extract_urls_from_sitemap(sitemap_url, url_filter, limit):
+    xml_text = _fetch_url(sitemap_url)
+    root = ET.fromstring(xml_text)
+    urls = []
+    for loc in root.iter('{*}loc'):
+        value = (loc.text or '').strip()
+        if url_filter(value):
+            urls.append(value)
+        if len(urls) >= limit:
+            break
+    SCRAPER_LOGGER.info("Sitemap %s yielded %s candidate URLs", sitemap_url, len(urls))
+    return urls
+
+
+def get_external_products(limit_per_source=6):
+    now = time.time()
+    if EXTERNAL_PRODUCTS_CACHE['data'] and EXTERNAL_PRODUCTS_CACHE['expires_at'] > now:
+        SCRAPER_LOGGER.info("Using cached external products: %s items", len(EXTERNAL_PRODUCTS_CACHE['data']))
+        return EXTERNAL_PRODUCTS_CACHE['data']
+
+    SCRAPER_LOGGER.info("Refreshing external products cache")
+
+    products = []
+    sources = [
+        {
+            'name': 'STP',
+            'category': 'Шумоизоляция',
+            'sitemaps': [
+                'https://stp-russia.ru/sitemap.xml',
+                'https://stp-russia.ru/sitemap_index.xml'
+            ],
+            'filter': lambda url: '/catalog/' in url and url.count('/') > 4
+        },
+        {
+            'name': 'ComfortMat',
+            'category': 'Шумоизоляция',
+            'sitemaps': [
+                'https://comfortmats.ru/product-sitemap.xml',
+                'https://comfortmats.ru/sitemap_index.xml',
+                'https://comfortmats.ru/wp-sitemap-posts-product-1.xml'
+            ],
+            'filter': lambda url: '/shop/' in url and url.count('/') > 4
+        }
+    ]
+
+    for source in sources:
+        SCRAPER_LOGGER.info("Loading source: %s", source['name'])
+        source_urls = []
+        for sitemap_url in source['sitemaps']:
+            try:
+                source_urls = _extract_urls_from_sitemap(sitemap_url, source['filter'], limit_per_source)
+            except Exception as exc:
+                SCRAPER_LOGGER.warning("Failed sitemap %s for %s: %s", sitemap_url, source['name'], exc)
+                continue
+            if source_urls:
+                break
+
+        if not source_urls:
+            SCRAPER_LOGGER.warning("No product URLs found for source: %s", source['name'])
+            continue
+
+        for url in source_urls[:limit_per_source]:
+            try:
+                product = _extract_product(url, source['name'], source['category'])
+            except Exception as exc:
+                SCRAPER_LOGGER.warning("Failed product parse %s: %s", url, exc)
+                product = None
+            if product:
+                products.append(product)
+
+        SCRAPER_LOGGER.info("Source %s produced %s products so far", source['name'], len([p for p in products if p.get('source') == source['name']]))
+
+    EXTERNAL_PRODUCTS_CACHE['data'] = products
+    EXTERNAL_PRODUCTS_CACHE['expires_at'] = now + 60 * 60 * 6
+    SCRAPER_LOGGER.info("External products refresh complete: %s items", len(products))
+    return products
 
 
 @application.context_processor
@@ -236,7 +414,7 @@ def cart():
 
 @application.route('/catalog')
 def catalog():
-    return render_template('catalog.html') 
+    return render_template('catalog.html', external_products=get_external_products()) 
 
 @application.route('/delivery')
 def delivery():
@@ -244,7 +422,7 @@ def delivery():
 
 @application.route('/')
 def index():
-    return render_template('index.html')
+    return render_template('index.html', external_products=get_external_products())
 
 @application.route('/news')
 def news():
@@ -269,6 +447,27 @@ def reviews():
 @application.route('/science')
 def science():
     return render_template('science.html')
+
+
+@application.route('/services')
+def services():
+    return render_template('services.html')
+
+@application.route('/shop')
+def shop():
+    return render_template('shop.html')
+
+@application.route('/comments')
+def comments():
+    return render_template('comments.html')
+
+@application.route('/configurator')
+def configurator():
+    return render_template('configurator.html')
+
+@application.route('/img/<path:filename>')
+def image_file(filename):
+    return send_from_directory('img', filename)
 
 @application.route('/<path:path>')
 def static_file(path):
