@@ -444,6 +444,8 @@ header.header-hidden { transform: translateY(-100%); }
 .cart-sidebar::-webkit-scrollbar-thumb { background: rgba(127, 127, 127, 0.35); border-radius: 999px; }
 .cart-sidebar::-webkit-scrollbar-thumb:hover { background: rgba(127, 127, 127, 0.55); }
 .cart-sidebar.open { transform: translateX(0); }
+#cartList { flex: 0 0 auto !important; overflow: visible !important; min-height: auto; margin-bottom: 24px; }
+
 
 /* =========================================
    CUSTOM TOAST NOTIFICATIONS (Никаких alert)
