@@ -5,20 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WILLI MEDIA | Главная</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=2.0">
+    <link rel="stylesheet" href="{{ cache_buster('style.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
 
     <header>
         <div class="container header-inner">
-            <a href="index.html" class="logo">WILLI <span>MEDIA</span></a>
+            <a href="{{ url_for('index') }}" class="logo">WILLI <span>MEDIA</span></a>
             <nav class="nav-links">
-                <a href="index.html" class="nav-link active">Главная</a>
-                <a href="services.html" class="nav-link">Услуги</a>
-                <a href="catalog.html" class="nav-link">Каталог</a>
-                <a href="index.html#config" class="nav-link">Запчасти</a>
-                <a href="reviews.html" class="nav-link">Отзывы</a>
+                <a href="{{ url_for('index') }}" class="nav-link active">Главная</a>
+                <a href="{{ url_for('services') }}" class="nav-link">Услуги</a>
+                <a href="{{ url_for('catalog') }}" class="nav-link">Каталог</a>
+                <a href="{{ url_for('index') }}#config" class="nav-link">Запчасти</a>
+                <a href="{{ url_for('reviews') }}" class="nav-link">Отзывы</a>
             </nav>
             
             <div style="display:flex; align-items:center; gap: 15px;">
@@ -48,11 +48,11 @@
 
     <div class="mobile-menu" id="mobileMenu">
         <button class="mobile-close" onclick="toggleMenu()">&times;</button>
-        <a href="index.html" class="mobile-link">ГЛАВНАЯ</a>
-        <a href="services.html" class="mobile-link">УСЛУГИ</a>
-        <a href="catalog.html" class="mobile-link">КАТАЛОГ</a>
-        <a href="index.html#config" class="mobile-link">ЗАПЧАСТИ</a>
-        <a href="reviews.html" class="mobile-link">ОТЗЫВЫ</a>
+        <a href="{{ url_for('index') }}" class="mobile-link">ГЛАВНАЯ</a>
+        <a href="{{ url_for('services') }}" class="mobile-link">УСЛУГИ</a>
+        <a href="{{ url_for('catalog') }}" class="mobile-link">КАТАЛОГ</a>
+        <a href="{{ url_for('index') }}#config" class="mobile-link">ЗАПЧАСТИ</a>
+        <a href="{{ url_for('reviews') }}" class="mobile-link">ОТЗЫВЫ</a>
     </div>
 
     <main>
@@ -70,11 +70,11 @@
                     </p>
                     <div style="display:flex; gap:15px;">
                         <a href="#config" class="btn btn-primary">ПОДОБРАТЬ СТИЛЬ</a>
-                        <a href="catalog.html" class="btn btn-ghost">В КАТАЛОГ -></a>
+                        <a href="{{ url_for('catalog') }}" class="btn btn-ghost">В КАТАЛОГ -></a>
                     </div>
                 </div>
                 <div class="hero-img-wrapper">
-                    <img src="main_3.webp" class="hero-img" alt="Hero Car">
+                    <img src="{{ url_for('image_file', filename='main_3.webp') }}" class="hero-img" alt="Hero Car">
                 </div>
             </div>
         </section>
@@ -83,7 +83,7 @@
     <div class="container visionary-grid">
         <div class="visionary-img-wrapper reveal">
             <!-- Заглушка, потом поставишь реальное фото -->
-            <img src="main_2.webp" alt="Wills Details Vision" class="visionary-img" onerror="this.src='https://images.unsplash.com/photo-1614200187524-dc4b892acf16?q=80&w=1000&auto=format&fit=crop'">
+            <img src="{{ url_for('image_file', filename='main_2.webp') }}" alt="Wills Details Vision" class="visionary-img" onerror="this.src='https://images.unsplash.com/photo-1614200187524-dc4b892acf16?q=80&w=1000&auto=format&fit=crop'">
         </div>
         <div class="visionary-content reveal delay-1">
             <div class="visionary-subtitle">The Visionary</div>
@@ -103,6 +103,28 @@
             </p>
             
             <a href="#config" class="btn btn-ghost visionary-btn" style="margin-top: 20px;">ПЕРЕЙТИ К ПОДБОРУ</a>
+        </div>
+    </div>
+</section>
+<section id="homeCatalog" class="section home-catalog-section">
+    <div class="container">
+        <div class="home-catalog-head reveal">
+            <div>
+                <div class="visionary-subtitle">Slider Section</div>
+                <h2>Каталог <span style="color:#888;">товаров</span></h2>
+            </div>
+            <button class="btn btn-ghost" onclick="toggleCart()">ОТКРЫТЬ КОРЗИНУ</button>
+        </div>
+
+        <div id="homeCatalogTabs" class="home-catalog-tabs reveal delay-1"></div>
+        <div id="homeCatalogSlider" class="home-catalog-slider reveal delay-2"></div>
+
+        <div class="home-catalog-summary reveal delay-2">
+            <div>
+                <div class="home-catalog-summary-label">Сумма товаров в корзине</div>
+                <div id="homeCatalogCartSum" class="home-catalog-summary-value">0 ₽</div>
+            </div>
+            <button class="btn btn-primary" onclick="toggleCart()">ОТКРЫТЬ КОРЗИНУ</button>
         </div>
     </div>
 </section>
@@ -145,9 +167,9 @@
                 </div>
                 <div class="footer-col">
                     <h4>Меню</h4>
-                    <a href="services.html">Услуги студии</a>
-                    <a href="catalog.html">Каталог материалов</a>
-                    <a href="reviews.html">Отзывы клиентов</a>
+                    <a href="{{ url_for('services') }}">Услуги студии</a>
+                    <a href="{{ url_for('catalog') }}">Каталог материалов</a>
+                    <a href="{{ url_for('reviews') }}">Отзывы клиентов</a>
                 </div>
                 <div class="footer-col">
                     <h4>Документы</h4>
@@ -214,6 +236,6 @@
         </div>
     </div>
 
-    <script src="script.js"></script>
+    <script src="{{ cache_buster('script.js') }}"></script>
 </body>
 </html>
