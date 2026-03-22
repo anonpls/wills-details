@@ -4,19 +4,19 @@
     <meta charset="UTF-8">
     <title>WILLI MEDIA | Подбор</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="{{ cache_buster('style.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
     <header>
         <div class="container header-inner">
-            <a href="index.html" class="logo">WILLI <span>MEDIA</span></a>
+            <a href="{{ url_for('index') }}" class="logo">WILLI <span>MEDIA</span></a>
             <nav class="nav-links">
-                <a href="index.html" class="nav-link active">Главная</a>
-                <a href="services.html" class="nav-link">Услуги</a>
-                <a href="catalog.html" class="nav-link">Каталог</a>
-                <a href="index.html#config" class="nav-link">Запчасти</a>
-                <a href="reviews.html" class="nav-link">Отзывы</a>
+                <a href="{{ url_for('index') }}" class="nav-link active">Главная</a>
+                <a href="{{ url_for('services') }}" class="nav-link">Услуги</a>
+                <a href="{{ url_for('catalog') }}" class="nav-link">Каталог</a>
+                <a href="{{ url_for('index') }}#config" class="nav-link">Запчасти</a>
+                <a href="{{ url_for('reviews') }}" class="nav-link">Отзывы</a>
             </nav>
             
             <div style="display:flex; align-items:center; gap: 15px;">
@@ -54,9 +54,17 @@
     </section>
 
     <div id="cartSidebar" class="cart-sidebar">
-        <div style="display:flex; justify-content:space-between; margin-bottom:30px;"><h2>Корзина</h2><button onclick="toggleCart()" style="border:none; bg:none; font-size:24px; cursor:pointer;">&times;</button></div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:30px;">
+            <h2>Корзина</h2>
+            <button onclick="toggleCart()" style="border:none; background:none; font-size:24px; cursor:pointer;">&times;</button>
+        </div>
         <div id="cartList" style="flex-grow:1; overflow-y:auto;"></div>
-        <div style="padding-top:20px; border-top:1px solid #eee;"><div style="display:flex; justify-content:space-between; font-weight:700; margin-bottom:20px;"><span>ИТОГО:</span><span id="cartTotal">0 ₽</span></div><button class="btn btn-primary" style="width:100%;">ОФОРМИТЬ</button></div>
+        <div style="padding-top:20px; border-top:1px solid #eee;">
+            <div style="display:flex; justify-content:space-between; font-weight:700; margin-bottom:20px;">
+                <span>ИТОГО:</span><span id="cartTotal">0 ₽</span>
+            </div>
+            <button class="btn btn-primary" style="width:100%;">ОФОРМИТЬ</button>
+        </div>
     </div>
 
 <footer>
@@ -68,9 +76,9 @@
                 </div>
                 <div class="footer-col">
                     <h4>Меню</h4>
-                    <a href="services.html">Услуги студии</a>
-                    <a href="catalog.html">Каталог материалов</a>
-                    <a href="reviews.html">Отзывы клиентов</a>
+                    <a href="{{ url_for('services') }}">Услуги студии</a>
+                    <a href="{{ url_for('catalog') }}">Каталог материалов</a>
+                    <a href="{{ url_for('reviews') }}">Отзывы клиентов</a>
                 </div>
                 <div class="footer-col">
                     <h4>Документы</h4>
@@ -88,6 +96,6 @@
             <div class="copyright">© 2026 Willi Media. Все права защищены.</div>
         </div>
     </footer>
-    <script src="script.js"></script>
+    <script src="{{ cache_buster('script.js') }}"></script>
 </body>
 </html>
