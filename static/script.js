@@ -4,32 +4,32 @@
 
 /* --- БАЗА ДАННЫХ: УСЛУГИ (Из Авито) --- */
 const servicesDB = [
-    { id: "noise", name: "Полная шумоизоляция", price: "от 12 000 ₽", shortDesc: "Автомобиля / дверей", fullDesc: "Комплексная шумоизоляция автомобиля или дверей. Убираем гул, скрипы и вибрации. Используем премиальные материалы (Legenda, Relief).", img: "main_1.png", badges: ["Тишина в салоне", "Premium материалы"] },
-    { id: "tint", name: "Тонировка стекол", price: "от 1 500 ₽", shortDesc: "Приватность и защита", fullDesc: "Тонировка стекол автомобиля качественными пленками. Защита от УФ-лучей, комфорт для зрения и приватность.", img: "main_2.png", badges: ["Защита от УФ", "Идеальная видимость"] },
-    { id: "audio", name: "Автозвук / Акустика", price: "от 1 500 ₽", shortDesc: "Установка акустики", fullDesc: "Профессиональная установка акустики, сабвуферов, усилителей. Настройка сцены для идеального звучания.", img: "main_3.png", badges: ["Чистый звук", "Комплекс услуг"] },
-    { id: "doors", name: "Установка доводчиков", price: "от 10 000 ₽", shortDesc: "Доводчики дверей на авто", fullDesc: "Установка премиальных доводчиков дверей. Плавное и бесшумное закрытие. Сохранение заводской гарантии.", img: "main_4.png", badges: ["Премиальный комфорт", "Честные цены"] },
-    { id: "ambient", name: "Подсветка салона", price: "от 10 000 ₽", shortDesc: "Установка контурной подсветки", fullDesc: "Контурная подсветка салона. Управление с телефона, множество цветов. Полностью преобразит салон вашего авто.", img: "main_5.png", badges: ["Smart управление", "Интеграция"] },
-    { id: "sim", name: "Пайка SIM-карт", price: "от 10 000 ₽", shortDesc: "LiXiang, Zeekr, Voyah", fullDesc: "Профессиональная пайка и установка российских SIM-карт в китайские автомобили (LiXiang, Zeekr, Voyah и др.).", img: "main_6.png", badges: ["Интернет в авто", "Гарантия"] },
-    { id: "steering", name: "Перетяжка руля", price: "от 4 000 ₽", shortDesc: "Ощущение новой машины", fullDesc: "Перетяжка руля премиальной кожей, наппой или алькантарой. Идеальные швы и заводское качество.", img: "main_7.png", badges: ["Натуральная кожа", "Ручная работа"] },
-    { id: "polish", name: "Полировка", price: "от 5 000 ₽", shortDesc: "Полировка фар и кузова", fullDesc: "Профессиональная полировка кузова и оптики. Восстановление прозрачности фар и блеска лакокрасочного покрытия.", img: "main_8.png", badges: ["Глубокий блеск", "Удаление царапин"] },
-    { id: "wrap", name: "Оклейка авто пленкой", price: "от 35 000 ₽", shortDesc: "Защита кузова полиуретаном", fullDesc: "Оклейка зон риска или кузова целиком антигравийной полиуретановой пленкой. Защита от сколов и царапин.", img: "main_9.png", badges: ["Полиуретан 200мкр", "Самовосстановление"] }
+    { id: "noise", name: "Полная шумоизоляция", price: "от 12 000 ₽", shortDesc: "Автомобиля / дверей", fullDesc: "Комплексная шумоизоляция автомобиля или дверей. Убираем гул, скрипы и вибрации. Используем премиальные материалы (Legenda, Relief).", img: "/img/main_1.png", badges: ["Тишина в салоне", "Premium материалы"] },
+    { id: "tint", name: "Тонировка стекол", price: "от 1 500 ₽", shortDesc: "Приватность и защита", fullDesc: "Тонировка стекол автомобиля качественными пленками. Защита от УФ-лучей, комфорт для зрения и приватность.", img: "/img/main_2.png", badges: ["Защита от УФ", "Идеальная видимость"] },
+    { id: "audio", name: "Автозвук / Акустика", price: "от 1 500 ₽", shortDesc: "Установка акустики", fullDesc: "Профессиональная установка акустики, сабвуферов, усилителей. Настройка сцены для идеального звучания.", img: "/img/main_3.png", badges: ["Чистый звук", "Комплекс услуг"] },
+    { id: "doors", name: "Установка доводчиков", price: "от 10 000 ₽", shortDesc: "Доводчики дверей на авто", fullDesc: "Установка премиальных доводчиков дверей. Плавное и бесшумное закрытие. Сохранение заводской гарантии.", img: "/img/main_4.png", badges: ["Премиальный комфорт", "Честные цены"] },
+    { id: "ambient", name: "Подсветка салона", price: "от 10 000 ₽", shortDesc: "Установка контурной подсветки", fullDesc: "Контурная подсветка салона. Управление с телефона, множество цветов. Полностью преобразит салон вашего авто.", img: "/img/main_5.png", badges: ["Smart управление", "Интеграция"] },
+    { id: "sim", name: "Пайка SIM-карт", price: "от 10 000 ₽", shortDesc: "LiXiang, Zeekr, Voyah", fullDesc: "Профессиональная пайка и установка российских SIM-карт в китайские автомобили (LiXiang, Zeekr, Voyah и др.).", img: "/img/main_6.png", badges: ["Интернет в авто", "Гарантия"] },
+    { id: "steering", name: "Перетяжка руля", price: "от 4 000 ₽", shortDesc: "Ощущение новой машины", fullDesc: "Перетяжка руля премиальной кожей, наппой или алькантарой. Идеальные швы и заводское качество.", img: "/img/main_7.png", badges: ["Натуральная кожа", "Ручная работа"] },
+    { id: "polish", name: "Полировка", price: "от 5 000 ₽", shortDesc: "Полировка фар и кузова", fullDesc: "Профессиональная полировка кузова и оптики. Восстановление прозрачности фар и блеска лакокрасочного покрытия.", img: "/img/main_8.png", badges: ["Глубокий блеск", "Удаление царапин"] },
+    { id: "wrap", name: "Оклейка авто пленкой", price: "от 35 000 ₽", shortDesc: "Защита кузова полиуретаном", fullDesc: "Оклейка зон риска или кузова целиком антигравийной полиуретановой пленкой. Защита от сколов и царапин.", img: "/img/main_1.webp", badges: ["Полиуретан 200мкр", "Самовосстановление"] }
 ];
 
 /* --- БАЗА ДАННЫХ: ТОВАРЫ (Шумка, спирт, клипсы) --- */
 const productsDB = [
-    { id: 101, name: "Legenda 4", cat: "ВИБРОИЗОЛЯЦИЯ", price: 650, img: "part_1.png", desc: "Премиальная виброизоляция. Эффективно убирает гул металла и структурные вибрации.", badges: ["Убирает гул", "Толщина 4мм"] },
-    { id: 102, name: "Relief", cat: "ЗВУКОПОГЛОТИТЕЛЬ", price: 850, img: "part_2.png", desc: "Звукопоглощающий материал. Отлично поглощает шум и убирает эффект эха в дверях.", badges: ["Поглощает шум", "Анти-эхо"] },
-    { id: 103, name: "Legenda 1.5", cat: "АНТИСКРИП", price: 450, img: "part_3.png", desc: "Тонкий материал для обработки дверных карт. Полностью убирает скрипы пластиковой обшивки.", badges: ["Убирает скрип", "Для обшивки"] },
-    { id: 104, name: "Legenda 2", cat: "ИЗОЛЯЦИЯ", price: 550, img: "part_4.png", desc: "Материал для закрытия технологических отверстий. Создает герметичный короб для идеального звучания динамика.", badges: ["Герметичность", "Для автозвука"] },
-    { id: 105, name: "Обезжириватель (Спирт)", cat: "РАСХОДНИКИ", price: 350, img: "part_5.png", desc: "Профессиональный изопропиловый спирт для подготовки поверхностей перед оклейкой и шумоизоляцией.", badges: ["Очистка 99%", "Без разводов"] },
-    { id: 106, name: "Набор VAG/BMW клипс", cat: "КРЕПЕЖ", price: 1200, img: "part_6.png", desc: "Профессиональный набор крепежных клипс для дверных карт и обшивки. Незаменимо при разборке салона.", badges: ["OEM Качество", "50 штук"] }
+    { id: 101, name: "Legenda 4", cat: "ВИБРОИЗОЛЯЦИЯ", price: 650, img: "/img/part_1.png", desc: "Премиальная виброизоляция. Эффективно убирает гул металла и структурные вибрации.", badges: ["Убирает гул", "Толщина 4мм"] },
+    { id: 102, name: "Relief", cat: "ЗВУКОПОГЛОТИТЕЛЬ", price: 850, img: "/img/part_2.png", desc: "Звукопоглощающий материал. Отлично поглощает шум и убирает эффект эха в дверях.", badges: ["Поглощает шум", "Анти-эхо"] },
+    { id: 103, name: "Legenda 1.5", cat: "АНТИСКРИП", price: 450, img: "/img/part_3.png", desc: "Тонкий материал для обработки дверных карт. Полностью убирает скрипы пластиковой обшивки.", badges: ["Убирает скрип", "Для обшивки"] },
+    { id: 104, name: "Legenda 2", cat: "ИЗОЛЯЦИЯ", price: 550, img: "/img/part_4.png", desc: "Материал для закрытия технологических отверстий. Создает герметичный короб для идеального звучания динамика.", badges: ["Герметичность", "Для автозвука"] },
+    { id: 105, name: "Обезжириватель (Спирт)", cat: "РАСХОДНИКИ", price: 350, img: "/img/part_5.png", desc: "Профессиональный изопропиловый спирт для подготовки поверхностей перед оклейкой и шумоизоляцией.", badges: ["Очистка 99%", "Без разводов"] },
+    { id: 106, name: "Набор VAG/BMW клипс", cat: "КРЕПЕЖ", price: 1200, img: "/img/part_6.png", desc: "Профессиональный набор крепежных клипс для дверных карт и обшивки. Незаменимо при разборке салона.", badges: ["OEM Качество", "50 штук"] }
 ];
 
 const carBrands = ["BMW X5", "BMW X6", "Li L9", "Zeekr 001", "Porsche Cayenne", "Mercedes G-Class"];
 const carDB = {
-    "bmw x5": { img: "car_bmw_x5.webp", specs: "G05 • 3.0D / 4.4i • M-Sport" },
-    "li l9": { img: "car_li_l9.webp", specs: "EREV • Max/Pro • 21' Wheels" },
-    "zeekr 001": { img: "car_zeekr_001.png", specs: "YOU/ME/WE • Z-Sport" }
+    "bmw x5": { img: "/img/car_bmw_x5.webp", specs: "G05 • 3.0D / 4.4i • M-Sport" },
+    "li l9": { img: "/img/car_li_l9.webp", specs: "EREV • Max/Pro • 21' Wheels" },
+    "zeekr 001": { img: "/img/car_zeekr_001.png", specs: "YOU/ME/WE • Z-Sport" }
 };
 
 let userPoints = parseInt(localStorage.getItem('williPoints')) || 500;
@@ -52,15 +52,22 @@ window.addEventListener('hashchange', setActiveMenuLink);
 
 function setActiveMenuLink() {
     const links = document.querySelectorAll('.nav-link');
-    let currentPath = window.location.pathname.split('/').pop() || 'index.html';
-    let currentHash = window.location.hash;
+    const currentUrl = new URL(window.location.href);
     links.forEach(link => {
         link.classList.remove('active');
         const href = link.getAttribute('href');
-        if (href.includes('#')) {
-            if (href === currentPath + currentHash) link.classList.add('active');
-        } else {
-            if (href === currentPath && currentHash === '') link.classList.add('active');
+        if (!href) return;
+
+        const linkUrl = new URL(href, window.location.origin);
+        const isSamePath = linkUrl.pathname === currentUrl.pathname;
+        const isHashLink = Boolean(linkUrl.hash);
+
+        if (isHashLink) {
+            if (isSamePath && linkUrl.hash === currentUrl.hash) {
+                link.classList.add('active');
+            }
+        } else if (isSamePath && currentUrl.hash === '') {
+            link.classList.add('active');
         }
     });
 }
