@@ -1,0 +1,901 @@
+/* =========================================
+   WILLI MEDIA | PREMIUM CORE STYLES
+   ========================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Orbitron:wght@400;600;700;900&display=swap');
+
+:root {
+    /* LIGHT THEME (Светлая тема по умолчанию) */
+    --bg-main: #F4F5F7;
+    --bg-card: #FFFFFF;
+    --bg-reverse: #050505;
+    --text-main: #0a0a0a;
+    --text-muted: #888888;
+    --text-reverse: #FFFFFF;
+    --accent: #d32f2f;
+    --border-color: rgba(0, 0, 0, 0.08);
+    --border-gradient: linear-gradient(135deg, rgba(0,0,0,0.1), rgba(0,0,0,0));
+    --glass-bg: rgba(255, 255, 255, 0.85);
+    --card-shadow: 0 20px 40px rgba(0, 0, 0, 0.04);
+    --hover-shadow: 0 30px 60px rgba(0, 0, 0, 0.1);
+    
+    /* ТИПОГРАФИКА И РАДИУСЫ */
+    --blur: blur(20px);
+    --font-head: 'Orbitron', sans-serif;
+    --font-body: 'Inter', sans-serif;
+    --radius-lg: 24px;
+    --radius-md: 16px;
+    --radius-sm: 8px;
+    
+    /* АНИМАЦИИ (Apple-like cubic-bezier) */
+    --transition-smooth: 0.8s cubic-bezier(0.16, 1, 0.3, 1); /* Было 0.6s, стало 0.8s - медленнее и плавнее */
+    --transition-fast: 0.5s cubic-bezier(0.16, 1, 0.3, 1);   /* Было 0.3s, стало 0.5s */
+}
+
+/* DARK THEME (Темная тема) */
+[data-theme="dark"] {
+    --bg-main: #0a0a0a;
+    --bg-card: #141414;
+    --bg-reverse: #F4F5F7;
+    --text-main: #F4F5F7;
+    --text-muted: #999999;
+    --text-reverse: #0a0a0a;
+    --border-color: rgba(255, 255, 255, 0.08);
+    --border-gradient: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0));
+    --glass-bg: rgba(10, 10, 10, 0.85);
+    --card-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+    --hover-shadow: 0 30px 60px rgba(0, 0, 0, 0.6);
+}
+
+/* =========================================
+   GLOBAL RESET & BASE
+   ========================================= */
+html {
+    scroll-behavior: smooth;
+    overflow-x: hidden;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    font-family: var(--font-body);
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    overflow-x: hidden;
+    transition: background-color var(--transition-smooth), color var(--transition-smooth);
+    /* Легкий текстурный шум для дороговизны */
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.03'/%3E%3C/svg%3E");
+}
+
+/* Кастомный скроллбар */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: var(--bg-main); }
+::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+main { flex: 1; width: 100%; }
+
+img { max-width: 100%; height: auto; display: block; }
+
+/* =========================================
+   TYPOGRAPHY
+   ========================================= */
+h1, h2, h3, .nav-link, .logo {
+    font-family: var(--font-head);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+h1 {
+    font-size: clamp(36px, 8vw, 80px);
+    line-height: 1.05;
+    font-weight: 900;
+    margin-bottom: 20px;
+    background: linear-gradient(90deg, var(--text-main) 0%, var(--text-muted) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    word-wrap: break-word;
+}
+
+h2 { font-size: clamp(24px, 5vw, 36px); margin-bottom: 40px; text-align: center; letter-spacing: 2px; }
+h3 { font-size: 18px; font-weight: 700; margin-bottom: 10px; }
+p { font-size: 14px; color: var(--text-muted); line-height: 1.6; }
+
+/* =========================================
+   LAYOUT & GRID
+   ========================================= */
+.container { 
+    width: 92%; 
+    max-width: 1400px; 
+    margin: 0 auto; 
+    padding: 0 15px; 
+}
+.section { padding: 100px 0; }
+
+.grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; }
+.grid-4 { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; }
+
+/* AESOP-STYLE SPLIT SECTIONS (Стильные блоки) */
+.aesop-split {
+    display: flex;
+    flex-wrap: wrap;
+    border-top: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-color);
+    margin: 80px 0;
+    transition: var(--transition-smooth);
+}
+.aesop-split:hover {
+    background: rgba(0,0,0,0.02);
+}
+[data-theme="dark"] .aesop-split:hover { background: rgba(255,255,255,0.02); }
+
+.aesop-text {
+    flex: 1 1 400px;
+    padding: 60px 40px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    border-right: 1px solid var(--border-color);
+}
+.aesop-image {
+    flex: 1 1 500px;
+    position: relative;
+    overflow: hidden;
+}
+.aesop-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 1.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.aesop-split:hover .aesop-image img {
+    transform: scale(1.03);
+}
+
+@media(max-width: 900px) {
+    .aesop-text { border-right: none; padding: 40px 20px; }
+    .aesop-image { min-height: 300px; }
+}
+
+/* =========================================
+   HEADER (SMART & MAGICAL)
+   ========================================= */
+header {
+    position: fixed;
+    top: 0; left: 0; width: 100%;
+    z-index: 1000;
+    background: var(--glass-bg);
+    backdrop-filter: var(--blur);
+    border-bottom: 1px solid var(--border-color);
+    height: 80px;
+    display: flex;
+    align-items: center;
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), background-color var(--transition-smooth);
+}
+
+/* Класс для скрытия хедера при скролле вниз */
+header.header-hidden { transform: translateY(-100%); }
+
+.header-inner { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+.nav-links { display: flex; gap: 35px; }
+.nav-link { 
+    text-decoration: none; 
+    color: var(--text-muted); 
+    font-size: 12px; 
+    font-weight: 600; 
+    position: relative;
+    transition: color var(--transition-fast);
+}
+.nav-link::after {
+    content: '';
+    position: absolute;
+    width: 0; height: 2px;
+    bottom: -5px; left: 0;
+    background-color: var(--text-main);
+    transition: width var(--transition-fast);
+}
+.nav-link:hover, .nav-link.active { color: var(--text-main); }
+.nav-link:hover::after, .nav-link.active::after { width: 100%; }
+
+.logo { font-size: 22px; font-weight: 900; color: var(--text-main); text-decoration: none; display: flex; align-items: center; gap: 5px;}
+
+.header-actions { display: flex; align-items: center; gap: 20px; }
+
+/* THEME TOGGLE BUTTON */
+.theme-toggle {
+    background: none; border: none; font-size: 18px; color: var(--text-main);
+    cursor: pointer; position: relative; width: 30px; height: 30px;
+    display: flex; align-items: center; justify-content: center;
+    transition: transform var(--transition-fast);
+}
+.theme-toggle:hover { transform: rotate(15deg); }
+.theme-toggle .fa-sun, .theme-toggle .fa-moon {
+    position: absolute; transition: opacity 0.3s, transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+/* Логика иконок темы */
+[data-theme="dark"] .theme-toggle .fa-moon { opacity: 0; transform: rotate(-90deg) scale(0.5); }
+[data-theme="dark"] .theme-toggle .fa-sun { opacity: 1; transform: rotate(0) scale(1); }
+[data-theme="light"] .theme-toggle .fa-sun { opacity: 0; transform: rotate(90deg) scale(0.5); }[data-theme="light"] .theme-toggle .fa-moon { opacity: 1; transform: rotate(0) scale(1); }
+
+/* БАЛАНС БОНУСОВ */
+.bonus-balance {
+    display: flex; align-items: center; gap: 8px;
+    background: rgba(128, 128, 128, 0.1);
+    padding: 8px 16px; border-radius: 20px;
+    border: 1px solid var(--border-color);
+    transition: var(--transition-fast);
+}
+.bonus-balance:hover { background: rgba(128, 128, 128, 0.2); transform: translateY(-2px); }
+
+.cart-btn { position: relative; font-size: 22px; color: var(--text-main); transition: transform var(--transition-fast); }
+.cart-btn:hover { transform: scale(1.1); }
+.cart-count { 
+    position: absolute; top: -6px; right: -8px; 
+    background: var(--accent); color: #fff; 
+    font-size: 10px; width: 18px; height: 18px; 
+    border-radius: 50%; display: flex; align-items: center; justify-content: center; 
+    font-weight: 700; box-shadow: 0 4px 10px rgba(211,47,47,0.4);
+}
+
+.burger-btn { display: none; background: none; border: none; font-size: 24px; color: var(--text-main); }
+
+/* =========================================
+   BUTTONS
+   ========================================= */
+.btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    padding: 16px 36px; font-size: 12px; font-weight: 700; text-decoration: none;
+    border-radius: var(--radius-sm); border: none; white-space: nowrap;
+    position: relative; overflow: hidden;
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+.btn::before {
+    content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s ease;
+}
+.btn:hover::before { left: 100%; }
+.btn:hover { transform: translateY(-3px); }
+
+.btn-primary { 
+    background: var(--text-main); color: var(--bg-main); 
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+[data-theme="dark"] .btn-primary { box-shadow: 0 10px 20px rgba(255,255,255,0.1); }
+
+.btn-ghost { 
+    background: transparent; border: 1px solid var(--text-main); color: var(--text-main); 
+}
+.btn-ghost:hover { background: var(--text-main); color: var(--bg-main); }
+
+/* =========================================
+   SCROLL REVEAL ANIMATIONS (Появление элементов)
+   ========================================= */
+.reveal {
+    opacity: 0;
+    transform: translateY(50px);
+    transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: opacity, transform;
+}
+.reveal.active { opacity: 1; transform: translateY(0); }
+.reveal.delay-1 { transition-delay: 0.1s; }
+.reveal.delay-2 { transition-delay: 0.2s; }
+.reveal.delay-3 { transition-delay: 0.3s; }
+
+/* =========================================
+   HERO SECTION
+   ========================================= */
+.hero { min-height: 100vh; display: flex; align-items: center; padding-top: 80px; position: relative; }
+.hero-grid { display: grid; grid-template-columns: 1fr 1.2fr; gap: 60px; align-items: center; width: 100%; }
+.hero-badges { display: flex; gap: 15px; margin-bottom: 30px; font-size: 11px; font-weight: 700; letter-spacing: 2px; }
+.hero-img-wrapper { position: relative; perspective: 1000px; }
+.hero-img { 
+    width: 100%; max-height: 650px; object-fit: contain; 
+    filter: drop-shadow(0 30px 60px rgba(0,0,0,0.2)); 
+    animation: floatCar 6s ease-in-out infinite;
+}
+@keyframes floatCar {
+    0% { transform: translateY(0px) rotateX(0deg); }
+    50% { transform: translateY(-15px) rotateX(2deg); }
+    100% { transform: translateY(0px) rotateX(0deg); }
+}
+
+/* =========================================
+   CARDS (Услуги, Каталог, Отзывы)
+   ========================================= */
+.card { 
+    background: var(--bg-card); 
+    border: 1px solid var(--border-color); 
+    border-radius: var(--radius-lg); 
+    padding: 20px; 
+    transition: var(--transition-smooth); 
+    box-shadow: var(--card-shadow);
+    display: flex; flex-direction: column;
+    position: relative; overflow: hidden;
+}
+.card:hover { transform: translateY(-8px); box-shadow: var(--hover-shadow); }
+
+.card::after {
+    content: ''; position: absolute; inset: 0; border-radius: inherit;
+    padding: 1px; background: var(--border-gradient);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor; pointer-events: none;
+}
+
+.card-img-container { 
+    width: 100%; aspect-ratio: 4/3; margin-bottom: 20px; 
+    overflow: hidden; border-radius: var(--radius-md); 
+    position: relative; background: var(--border-color); 
+}
+.card-img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s ease; }
+.card:hover .card-img { transform: scale(1.05); }
+
+.card-actions { display: flex; gap: 10px; margin-top: auto; padding-top: 15px; }
+.btn-wide { 
+    flex-grow: 1; background: var(--text-main); color: var(--bg-main); 
+    border: none; padding: 14px; border-radius: var(--radius-sm); 
+    font-weight: 700; font-size: 11px; text-transform: uppercase; 
+    transition: var(--transition-fast);
+}
+.btn-wide:hover { transform: translateY(-2px); opacity: 0.9; }
+
+.btn-circle { 
+    width: 44px; height: 44px; min-width: 44px; border-radius: 50%; 
+    background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main);
+    display: flex; align-items: center; justify-content: center; 
+    transition: var(--transition-fast);
+}
+.btn-circle:hover { background: var(--text-main); color: var(--bg-main); transform: rotate(15deg); }
+
+/* =========================================
+   CONFIGURATOR (Smart Selection)
+   ========================================= */
+.config-search-bar { 
+    display: flex; gap: 10px; background: var(--bg-card); padding: 12px; 
+    border-radius: var(--radius-lg); border: 1px solid var(--border-color); 
+    margin-bottom: 40px; box-shadow: var(--card-shadow); flex-wrap: wrap; 
+    position: relative; z-index: 10;
+}
+.config-input { 
+    flex-grow: 1; border: none; font-size: 16px; padding: 0 20px; 
+    font-family: var(--font-body); background: transparent; color: var(--text-main); min-width: 200px; 
+}
+.config-result { display: none; grid-template-columns: 1fr 1fr; gap: 50px; margin-top: 40px; align-items: start; }
+
+/* Сканирующий эффект конфигуратора */
+.scan-overlay {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background: linear-gradient(to bottom, transparent, var(--accent), transparent);
+    opacity: 0.3; height: 5px; animation: scanLine 2s linear infinite; display: none;
+}
+@keyframes scanLine { 0% { top: 0; } 100% { top: 100%; } }
+
+/* =========================================
+   MODALS & SIDEBARS (Корзина, Отзывы, Тел)
+   ========================================= */
+.modal-overlay, .cart-sidebar-overlay { 
+    position: fixed; inset: 0; background: rgba(0,0,0,0.6); 
+    backdrop-filter: blur(10px); z-index: 3000; 
+    display: flex; align-items: center; justify-content: center; 
+    opacity: 0; visibility: hidden; transition: var(--transition-fast); padding: 20px; 
+}
+.modal-overlay.active, .cart-sidebar-overlay.active { opacity: 1; visibility: visible; }
+
+.modal-content { 
+    background: var(--bg-card); width: 100%; max-width: 900px; max-height: 90vh; 
+    border-radius: var(--radius-lg); overflow: hidden; display: grid; grid-template-columns: 1fr 1fr; 
+    position: relative; transform: scale(0.95) translateY(20px); transition: var(--transition-smooth); 
+    box-shadow: 0 40px 100px rgba(0,0,0,0.3); border: 1px solid var(--border-color);
+}
+.modal-overlay.active .modal-content { transform: scale(1) translateY(0); }
+
+.modal-img-col { position: relative; background: var(--border-color); min-height: 300px; }
+.modal-img-col img { width: 100%; height: 100%; object-fit: cover; position: absolute; inset: 0; }
+.modal-info-col { padding: 40px; overflow-y: auto; display: flex; flex-direction: column; }
+
+.modal-close { 
+    position: absolute; top: 20px; right: 20px; font-size: 24px; 
+    width: 40px; height: 40px; background: var(--bg-main); border: none; 
+    border-radius: 50%; color: var(--text-main); display: flex; align-items: center; justify-content: center;
+    transition: var(--transition-fast); z-index: 10;
+}
+.modal-close:hover { background: var(--accent); color: #fff; transform: rotate(90deg); }
+
+/* PHONE & REVIEW MODALS (Меньший размер) */
+.phone-modal-box { 
+    background: var(--bg-card); padding: 50px 30px; border-radius: var(--radius-lg); 
+    text-align: center; max-width: 450px; width: 100%; position: relative;
+    border: 1px solid var(--border-color); box-shadow: var(--card-shadow);
+    transform: scale(0.95); transition: var(--transition-smooth);
+}
+.modal-overlay.active .phone-modal-box { transform: scale(1); }
+
+/* Звезды в отзывах */
+.star-rating { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; flex-direction: row-reverse; }
+.star-rating input { display: none; }
+.star-rating label { font-size: 30px; color: var(--border-color); transition: 0.2s;}
+.star-rating label:hover, .star-rating label:hover ~ label, .star-rating input:checked ~ label { color: #FFD700; }
+
+.review-textarea { 
+    width: 100%; height: 100px; background: var(--bg-main); border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm); padding: 15px; color: var(--text-main);
+    font-family: var(--font-body); resize: none; margin-bottom: 20px;
+}
+
+/* CART SIDEBAR */
+.cart-sidebar { 
+    position: fixed; top: 0; right: 0; width: 100%; max-width: 420px; height: 100%; 
+    background: var(--bg-card); z-index: 3001; padding: 40px 30px; 
+    box-shadow: -20px 0 60px rgba(0,0,0,0.15); border-left: 1px solid var(--border-color);
+    transform: translateX(100%); transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1); 
+    display: flex; flex-direction: column; 
+}
+.cart-sidebar.open { transform: translateX(0); }
+
+/* =========================================
+   CUSTOM TOAST NOTIFICATIONS (Никаких alert)
+   ========================================= */
+.toast-container {
+    position: fixed; bottom: 30px; right: 30px;
+    display: flex; flex-direction: column; gap: 15px; z-index: 9999;
+    pointer-events: none;
+}
+.toast {
+    background: var(--bg-reverse); color: var(--text-reverse);
+    padding: 16px 24px; border-radius: var(--radius-md);
+    font-size: 13px; font-weight: 600; font-family: var(--font-body);
+    display: flex; align-items: center; gap: 12px;
+    box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+    transform: translateX(120%) scale(0.9); opacity: 0;
+    transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.5s;
+    pointer-events: auto;
+}
+.toast.show { transform: translateX(0) scale(1); opacity: 1; }
+.toast i { font-size: 18px; color: var(--accent); }
+.toast.success i { color: #4CAF50; }
+.toast.bonus i { color: #FFD700; }
+
+/* =========================================
+   FOOTER
+   ========================================= */
+footer { 
+    background: #050505; color: #fff; padding: 80px 0 30px; 
+    margin-top: auto; border-top: 1px solid #222; position: relative; overflow: hidden;
+}
+.footer-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 50px; margin-bottom: 60px; position: relative; z-index: 2;}
+.footer-col h4 { font-size: 16px; margin-bottom: 25px; color: #fff; letter-spacing: 2px; }
+.footer-col a, .footer-col p { 
+    display: block; color: #888; text-decoration: none; 
+    margin-bottom: 15px; font-size: 13px; transition: color var(--transition-fast); 
+}
+.footer-col a:hover { color: #fff; transform: translateX(5px); }
+.copyright { border-top: 1px solid #222; padding-top: 30px; text-align: center; color: #555; font-size: 12px; }
+
+/* =========================================
+   MOBILE RESPONSIVE
+   ========================================= */
+@media (max-width: 900px) {
+    .container { padding: 0 20px; }
+    .nav-links, .theme-toggle { display: none; } /* Тему в бургер перенесем */
+    .burger-btn { display: block; }
+    
+    .hero-grid { grid-template-columns: 1fr; gap: 40px; text-align: center; }
+    .hero-badges { justify-content: center; }
+    
+    .config-result, .modal-content { grid-template-columns: 1fr; }
+    .modal-content { max-height: 85vh; display: flex; flex-direction: column; }
+    .modal-img-col { min-height: 250px; flex-shrink: 0; }
+    .modal-info-col { padding: 25px; }
+
+    .toast-container { bottom: 20px; right: 20px; left: 20px; align-items: center; }
+    .toast { width: 100%; justify-content: center; transform: translateY(100px) scale(0.9); }
+    .toast.show { transform: translateY(0) scale(1); }
+    
+    .cart-sidebar { max-width: 100%; padding: 30px 20px; }
+}
+
+/* MOBILE MENU */
+.mobile-menu {
+    position: fixed; inset: 0; background: var(--bg-card); z-index: 2000;
+    padding: 80px 30px; display: flex; flex-direction: column; gap: 30px;
+    transform: translateY(-100%); transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.mobile-menu.active { transform: translateY(0); }
+.mobile-link { font-family: var(--font-head); font-size: 32px; text-decoration: none; color: var(--text-main); font-weight: 900; }
+.mobile-close { position: absolute; top: 20px; right: 20px; font-size: 40px; background: none; border: none; color: var(--text-main); }
+.mobile-theme-wrapper { margin-top: auto; border-top: 1px solid var(--border-color); padding-top: 20px; display: flex; align-items: center; justify-content: space-between; font-weight: 700;}
+/* =========================================
+   AESTHETICS UPDATE: AESOP + WILLI (MINIMALISM)
+   ========================================= */
+
+/* 1. Элитная типографика (Inter -60 Tracking) */
+body, p, .nav-link, .product-desc, .toast {
+    font-family: 'Inter', sans-serif !important;
+    font-weight: 300 !important;
+    letter-spacing: -0.03em !important; /* Тот самый эффект сужения */
+}
+
+/* Заголовки продуктов оставляем чуть жирнее, но стильными */
+.product-title {
+    font-family: 'Inter', sans-serif !important;
+    font-weight: 500 !important;
+    letter-spacing: -0.02em !important;
+}
+
+/* 2. Убираем "колхозную" анимацию машины */
+.hero-img {
+    animation: none !important;
+    filter: drop-shadow(0 40px 80px rgba(0,0,0,0.15)) !important;
+}
+
+/* 3. AESOP STYLE PRODUCT CARDS (Замена старым .card) */
+.product-card {
+    position: relative;
+    background: transparent !important; /* Убираем белые плашки */
+    border: none !important; /* Никаких рамок */
+    box-shadow: none !important; /* Никаких тяжелых теней */
+    padding: 30px 20px 80px 20px; /* Много воздуха, снизу место под кнопку */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    border-radius: var(--radius-md) !important;
+    transition: background 0.4s ease !important;
+    overflow: hidden;
+}
+
+.product-card:hover {
+    background: rgba(0, 0, 0, 0.02) !important; /* Едва заметный фон при наведении */
+}
+[data-theme="dark"] .product-card:hover {
+    background: rgba(255, 255, 255, 0.02) !important;
+}
+
+/* Иконка избранного в углу (Aesop style) */
+.wishlist-btn {
+    position: absolute;
+    top: 20px; right: 20px;
+    background: none; border: none;
+    font-size: 18px; color: var(--text-muted);
+    cursor: pointer; z-index: 10;
+    transition: transform var(--transition-fast), color var(--transition-fast);
+}
+.wishlist-btn:hover { color: var(--accent); transform: scale(1.1); }
+
+/* Картинка продукта */
+.product-image {
+    width: 100%; height: 280px;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 30px; cursor: pointer;
+    background: transparent !important;
+}
+.product-image img {
+    max-height: 100%; max-width: 80%;
+    object-fit: contain;
+    transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.product-card:hover .product-image img {
+    transform: scale(1.08); /* Плавный красивый зум */
+}
+
+/* Текстовый блок продукта */
+.product-meta {
+    display: flex; flex-direction: column; align-items: center; flex-grow: 1;
+}
+.product-desc {
+    font-size: 13px; color: var(--text-muted);
+    margin-bottom: 15px; max-width: 250px;
+    line-height: 1.4;
+}
+.product-price {
+    font-size: 14px; font-weight: 400; margin-top: auto;
+}
+
+/* ВЫЕЗЖАЮЩАЯ КНОПКА (Aesop Style Slide-up) */
+.product-action {
+    position: absolute;
+    bottom: 0; left: 0; width: 100%;
+    padding: 0 20px 20px 20px;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+/* На компах кнопка выезжает при наведении */
+@media (hover: hover) {
+    .product-card:hover .product-action {
+        opacity: 1; transform: translateY(0);
+    }
+}
+/* На мобилках кнопка всегда видна (так как нет ховера) */
+@media (hover: none) {
+    .product-action {
+        opacity: 1; transform: translateY(0);
+        position: relative; padding: 20px 0 0 0;
+    }
+    .product-card { padding-bottom: 30px; }
+}
+
+/* Сама стильная темная кнопка */
+.add-cart-btn {
+    width: 100%;
+    background: var(--text-main);
+    color: var(--bg-main);
+    border: none;
+    padding: 18px 0;
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 13px;
+    letter-spacing: -0.01em;
+    cursor: pointer;
+    border-radius: var(--radius-sm); /* Сохраняем нашу легкую скругленность */
+    transition: transform var(--transition-fast), opacity var(--transition-fast);
+}
+.add-cart-btn:hover {
+    transform: translateY(-2px);
+    opacity: 0.8;
+}
+
+/* 4. ИДЕАЛЬНЫЙ КУРСОР (Больше не пропадает) */
+@media (pointer: fine) {
+    a, button, input, textarea, .nav-link, .product-card, .logo {}
+    
+    .cursor-dot, .cursor-outline {
+        position: fixed; top: 0; left: 0;
+        transform: translate(-50%, -50%);
+        border-radius: 50%; pointer-events: none;
+        /* Режим смешивания инвертирует цвет! Белый на черном, черный на белом */
+        mix-blend-mode: difference; 
+        z-index: 999999; /* Поверх ВСЕГО */
+    }
+    
+    .cursor-dot {
+        width: 6px; height: 6px;
+        background-color: #fff; /* Из-за difference всегда будет контрастным */
+        transition: width 0.2s, height 0.2s;
+    }
+    
+    .cursor-outline {
+        width: 40px; height: 40px;
+        border: 1px solid #fff;
+        transition: width 0.3s, height 0.3s, background-color 0.3s, opacity 0.3s;
+        opacity: 0.5;
+    }
+
+    body.cursor-hover .cursor-outline {
+        width: 60px; height: 60px;
+        background-color: rgba(255,255,255,0.1);
+        border-color: #fff; opacity: 1;
+    }
+    body.cursor-hover .cursor-dot { width: 0; height: 0; }
+}
+
+/* =========================================
+   UI BADGES (Те самые крутые плашки)
+   ========================================= */
+.ui-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    transition: var(--transition-fast);
+}
+.ui-badge.success { 
+    background: rgba(76, 175, 80, 0.08); 
+    border: 1px solid rgba(76, 175, 80, 0.2); 
+    color: #4CAF50; 
+}
+.ui-badge.dark { 
+    background: rgba(255, 255, 255, 0.05); 
+    border: 1px solid rgba(255, 255, 255, 0.1); 
+    color: #fff; 
+}
+.ui-badge.accent { 
+    background: rgba(211, 47, 47, 0.05); 
+    border: 1px solid rgba(211, 47, 47, 0.2); 
+    color: var(--accent); 
+}
+
+/* =========================================
+   VISIONARY SECTION (ИДЕОЛОГИЯ)
+   ========================================= */
+.visionary-section {
+    background-color: #050505; /* Глубокий черный фон */
+    color: #fff;
+    padding: 120px 0;
+    border-top: 1px solid #111;
+    border-bottom: 1px solid #111;
+}
+.visionary-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+    align-items: center;
+}
+.visionary-subtitle {
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: #888;
+    margin-bottom: 10px;
+}
+.visionary-title {
+    font-family: var(--font-head);
+    font-size: clamp(32px, 5vw, 48px);
+    font-weight: 400; /* Более тонкий и элегантный заголовок */
+    letter-spacing: 4px;
+    margin-bottom: 30px;
+    color: #fff;
+    text-align: left;
+}
+.visionary-text {
+    color: #999;
+    font-size: 14px;
+    line-height: 1.8;
+    margin-bottom: 20px;
+    font-weight: 300;
+    letter-spacing: -0.02em;
+}
+.visionary-img-wrapper img {
+    width: 100%;
+    height: auto;
+    border-radius: 4px; /* Легкое, строгое скругление */
+    filter: brightness(0.9) contrast(1.1); /* Делаем фото чуть более драматичным */
+    transition: transform 1s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.visionary-img-wrapper:hover img {
+    transform: scale(1.03); /* Очень медленный зум при наведении */
+}
+.visionary-btn {
+    border-color: #444;
+    color: #ccc;
+    border-radius: 4px;
+}
+.visionary-btn:hover {
+    background-color: #fff;
+    color: #000;
+    border-color: #fff;
+}
+
+/* ЗАМЕДЛЕНИЕ АНИМАЦИИ КНОПОК */
+.btn:hover, .add-cart-btn:hover { 
+    transform: translateY(-2px); /* Уменьшил подпрыгивание с -3px до -2px */
+}
+
+@media(max-width: 900px) {
+    .visionary-section { padding: 80px 0; }
+    .visionary-grid { grid-template-columns: 1fr; gap: 40px; }
+    .visionary-title { text-align: left; }
+    .visionary-img-wrapper { order: -1; } /* Картинка всегда сверху на мобилках */
+}
+
+/* =========================================
+   ФИНАЛЬНЫЕ ПРАВКИ: КУРСОР, КАРТОЧКИ И МЕНЮ
+   ========================================= */
+
+/* 1. Жестко возвращаем родной курсор (убиваем все баги с F12) */
+body, a, button, input, textarea, .nav-link, .product-card, .logo, .theme-toggle, .wishlist-btn {
+    cursor: auto !important;
+}
+a:hover, button:hover, .product-card:hover, .logo:hover, .nav-link:hover, .theme-toggle:hover, .wishlist-btn:hover, .bonus-balance:hover {
+    cursor: pointer !important;
+}
+
+/* 2. Отделяем карточки товаров от фона (тончайший контраст) */
+.product-card {
+    background: var(--bg-card) !important; /* В светлой теме белый, в темной - почти черный */
+    border: 1px solid rgba(0, 0, 0, 0.03) !important; /* Ультра-тонкая граница */
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.02) !important; /* Воздушная тень */
+}
+[data-theme="dark"] .product-card {
+    border: 1px solid rgba(255, 255, 255, 0.03) !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2) !important;
+}
+/* =========================================
+   ФИНАЛ: ПЕРЕКЛЮЧАТЕЛЬ ТЕМЫ И ПЛЮСИК
+   ========================================= */
+
+/* Анимация ползунка Солнце / Луна */
+.theme-switch {
+    position: relative;
+    display: inline-block;
+    width: 54px;
+    height: 28px;
+    cursor: pointer !important;
+}
+.theme-switch input { opacity: 0; width: 0; height: 0; }
+.theme-switch .slider {
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    background-color: rgba(0, 0, 0, 0.05);
+    transition: 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    border-radius: 30px;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 6px; border: 1px solid var(--border-color);
+}
+[data-theme="dark"] .theme-switch .slider { background-color: rgba(255, 255, 255, 0.05); }
+
+/* Сам кружочек внутри ползунка */
+.theme-switch .slider:before {
+    position: absolute; content: "";
+    height: 20px; width: 20px;
+    left: 4px; bottom: 3px;
+    background-color: #fff;
+    transition: 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    border-radius: 50%; z-index: 2;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+[data-theme="dark"] .theme-switch .slider:before {
+    transform: translateX(24px);
+    background-color: #141414;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+}
+
+/* Иконки под кружочком */
+.theme-switch .fa-sun { color: #FFD700; font-size: 12px; z-index: 1; }
+.theme-switch .fa-moon { color: #fff; font-size: 12px; z-index: 1; }
+
+/* Идеальный Hover для Плюсика в конфигураторе */
+.config-plus-btn {
+    background: none; border: none; font-size: 20px; color: var(--text-main);
+    width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), color 0.3s;
+}
+/* Hover работает только пока мы не нажали (пока нет класса checked) */
+.config-plus-btn:not(.checked):hover {
+    color: var(--accent);
+    transform: scale(1.3) rotate(90deg); /* Легкий зум и красивый поворот плюсика */
+}
+/* Состояние когда нажали (Галочка) */
+.config-plus-btn.checked {
+    color: #4CAF50 !important;
+    transform: scale(1.2) !important;
+}
+/* =========================================
+   LEGAL MODALS STYLING (Оферта, Доставка)
+   ========================================= */
+#legalModalBody h2 {
+    font-family: var(--font-head);
+    font-size: 28px;
+    margin-bottom: 10px;
+    text-align: left;
+    letter-spacing: 1px;
+    color: var(--text-main);
+}
+#legalModalBody h3 {
+    font-family: var(--font-body);
+    font-size: 16px;
+    font-weight: 600;
+    margin-top: 30px;
+    margin-bottom: 15px;
+    color: var(--text-main);
+}
+#legalModalBody p {
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 300;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+    line-height: 1.6;
+}
+#legalModalBody strong {
+    color: var(--text-main);
+    font-weight: 500;
+}
+/* Стилизация скроллбара внутри модалки */
+#legalModalBody::-webkit-scrollbar { width: 4px; }
+#legalModalBody::-webkit-scrollbar-track { background: transparent; }
+#legalModalBody::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 4px; }
