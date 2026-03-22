@@ -54,9 +54,17 @@
     </section>
 
     <div id="cartSidebar" class="cart-sidebar">
-        <div style="display:flex; justify-content:space-between; margin-bottom:30px;"><h2>Корзина</h2><button onclick="toggleCart()" style="border:none; bg:none; font-size:24px; cursor:pointer;">&times;</button></div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:30px;">
+            <h2>Корзина</h2>
+            <button onclick="toggleCart()" style="border:none; background:none; font-size:24px; cursor:pointer;">&times;</button>
+        </div>
         <div id="cartList" style="flex-grow:1; overflow-y:auto;"></div>
-        <div style="padding-top:20px; border-top:1px solid #eee;"><div style="display:flex; justify-content:space-between; font-weight:700; margin-bottom:20px;"><span>ИТОГО:</span><span id="cartTotal">0 ₽</span></div><button class="btn btn-primary" style="width:100%;">ОФОРМИТЬ</button></div>
+        <div style="padding-top:20px; border-top:1px solid #eee;">
+            <div style="display:flex; justify-content:space-between; font-weight:700; margin-bottom:20px;">
+                <span>ИТОГО:</span><span id="cartTotal">0 ₽</span>
+            </div>
+            <button class="btn btn-primary" style="width:100%;">ОФОРМИТЬ</button>
+        </div>
     </div>
 
 <footer>
