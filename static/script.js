@@ -4,36 +4,57 @@
 
 /* --- БАЗА ДАННЫХ: УСЛУГИ (Из Авито) --- */
 const servicesDB = [
-    { id: "noise", name: "Полная шумоизоляция", price: "от 12 000 ₽", shortDesc: "Автомобиля / дверей", fullDesc: "Комплексная шумоизоляция автомобиля или дверей. Убираем гул, скрипы и вибрации. Используем премиальные материалы (Legenda, Relief).", img: "main_1.png", badges: ["Тишина в салоне", "Premium материалы"] },
-    { id: "tint", name: "Тонировка стекол", price: "от 1 500 ₽", shortDesc: "Приватность и защита", fullDesc: "Тонировка стекол автомобиля качественными пленками. Защита от УФ-лучей, комфорт для зрения и приватность.", img: "main_2.png", badges: ["Защита от УФ", "Идеальная видимость"] },
-    { id: "audio", name: "Автозвук / Акустика", price: "от 1 500 ₽", shortDesc: "Установка акустики", fullDesc: "Профессиональная установка акустики, сабвуферов, усилителей. Настройка сцены для идеального звучания.", img: "main_3.png", badges: ["Чистый звук", "Комплекс услуг"] },
-    { id: "doors", name: "Установка доводчиков", price: "от 10 000 ₽", shortDesc: "Доводчики дверей на авто", fullDesc: "Установка премиальных доводчиков дверей. Плавное и бесшумное закрытие. Сохранение заводской гарантии.", img: "main_4.png", badges: ["Премиальный комфорт", "Честные цены"] },
-    { id: "ambient", name: "Подсветка салона", price: "от 10 000 ₽", shortDesc: "Установка контурной подсветки", fullDesc: "Контурная подсветка салона. Управление с телефона, множество цветов. Полностью преобразит салон вашего авто.", img: "main_5.png", badges: ["Smart управление", "Интеграция"] },
-    { id: "sim", name: "Пайка SIM-карт", price: "от 10 000 ₽", shortDesc: "LiXiang, Zeekr, Voyah", fullDesc: "Профессиональная пайка и установка российских SIM-карт в китайские автомобили (LiXiang, Zeekr, Voyah и др.).", img: "main_6.png", badges: ["Интернет в авто", "Гарантия"] },
-    { id: "steering", name: "Перетяжка руля", price: "от 4 000 ₽", shortDesc: "Ощущение новой машины", fullDesc: "Перетяжка руля премиальной кожей, наппой или алькантарой. Идеальные швы и заводское качество.", img: "main_7.png", badges: ["Натуральная кожа", "Ручная работа"] },
-    { id: "polish", name: "Полировка", price: "от 5 000 ₽", shortDesc: "Полировка фар и кузова", fullDesc: "Профессиональная полировка кузова и оптики. Восстановление прозрачности фар и блеска лакокрасочного покрытия.", img: "main_8.png", badges: ["Глубокий блеск", "Удаление царапин"] },
-    { id: "wrap", name: "Оклейка авто пленкой", price: "от 35 000 ₽", shortDesc: "Защита кузова полиуретаном", fullDesc: "Оклейка зон риска или кузова целиком антигравийной полиуретановой пленкой. Защита от сколов и царапин.", img: "main_9.png", badges: ["Полиуретан 200мкр", "Самовосстановление"] }
+    { id: "noise", name: "Полная шумоизоляция", price: "от 12 000 ₽", shortDesc: "Автомобиля / дверей", fullDesc: "Комплексная шумоизоляция автомобиля или дверей. Убираем гул, скрипы и вибрации. Используем премиальные материалы (Legenda, Relief).", img: "/img/main_1.png", badges: ["Тишина в салоне", "Premium материалы"] },
+    { id: "tint", name: "Тонировка стекол", price: "от 1 500 ₽", shortDesc: "Приватность и защита", fullDesc: "Тонировка стекол автомобиля качественными пленками. Защита от УФ-лучей, комфорт для зрения и приватность.", img: "/img/main_2.png", badges: ["Защита от УФ", "Идеальная видимость"] },
+    { id: "audio", name: "Автозвук / Акустика", price: "от 1 500 ₽", shortDesc: "Установка акустики", fullDesc: "Профессиональная установка акустики, сабвуферов, усилителей. Настройка сцены для идеального звучания.", img: "/img/main_3.png", badges: ["Чистый звук", "Комплекс услуг"] },
+    { id: "doors", name: "Установка доводчиков", price: "от 10 000 ₽", shortDesc: "Доводчики дверей на авто", fullDesc: "Установка премиальных доводчиков дверей. Плавное и бесшумное закрытие. Сохранение заводской гарантии.", img: "/img/main_4.png", badges: ["Премиальный комфорт", "Честные цены"] },
+    { id: "ambient", name: "Подсветка салона", price: "от 10 000 ₽", shortDesc: "Установка контурной подсветки", fullDesc: "Контурная подсветка салона. Управление с телефона, множество цветов. Полностью преобразит салон вашего авто.", img: "/img/main_5.png", badges: ["Smart управление", "Интеграция"] },
+    { id: "sim", name: "Пайка SIM-карт", price: "от 10 000 ₽", shortDesc: "LiXiang, Zeekr, Voyah", fullDesc: "Профессиональная пайка и установка российских SIM-карт в китайские автомобили (LiXiang, Zeekr, Voyah и др.).", img: "/img/main_6.png", badges: ["Интернет в авто", "Гарантия"] },
+    { id: "steering", name: "Перетяжка руля", price: "от 4 000 ₽", shortDesc: "Ощущение новой машины", fullDesc: "Перетяжка руля премиальной кожей, наппой или алькантарой. Идеальные швы и заводское качество.", img: "/img/main_7.png", badges: ["Натуральная кожа", "Ручная работа"] },
+    { id: "polish", name: "Полировка", price: "от 5 000 ₽", shortDesc: "Полировка фар и кузова", fullDesc: "Профессиональная полировка кузова и оптики. Восстановление прозрачности фар и блеска лакокрасочного покрытия.", img: "/img/main_8.png", badges: ["Глубокий блеск", "Удаление царапин"] },
+    { id: "wrap", name: "Оклейка авто пленкой", price: "от 35 000 ₽", shortDesc: "Защита кузова полиуретаном", fullDesc: "Оклейка зон риска или кузова целиком антигравийной полиуретановой пленкой. Защита от сколов и царапин.", img: "/img/main_1.webp", badges: ["Полиуретан 200мкр", "Самовосстановление"] }
 ];
 
 /* --- БАЗА ДАННЫХ: ТОВАРЫ (Шумка, спирт, клипсы) --- */
-const productsDB = [
-    { id: 101, name: "Legenda 4", cat: "ВИБРОИЗОЛЯЦИЯ", price: 650, img: "part_1.png", desc: "Премиальная виброизоляция. Эффективно убирает гул металла и структурные вибрации.", badges: ["Убирает гул", "Толщина 4мм"] },
-    { id: 102, name: "Relief", cat: "ЗВУКОПОГЛОТИТЕЛЬ", price: 850, img: "part_2.png", desc: "Звукопоглощающий материал. Отлично поглощает шум и убирает эффект эха в дверях.", badges: ["Поглощает шум", "Анти-эхо"] },
-    { id: 103, name: "Legenda 1.5", cat: "АНТИСКРИП", price: 450, img: "part_3.png", desc: "Тонкий материал для обработки дверных карт. Полностью убирает скрипы пластиковой обшивки.", badges: ["Убирает скрип", "Для обшивки"] },
-    { id: 104, name: "Legenda 2", cat: "ИЗОЛЯЦИЯ", price: 550, img: "part_4.png", desc: "Материал для закрытия технологических отверстий. Создает герметичный короб для идеального звучания динамика.", badges: ["Герметичность", "Для автозвука"] },
-    { id: 105, name: "Обезжириватель (Спирт)", cat: "РАСХОДНИКИ", price: 350, img: "part_5.png", desc: "Профессиональный изопропиловый спирт для подготовки поверхностей перед оклейкой и шумоизоляцией.", badges: ["Очистка 99%", "Без разводов"] },
-    { id: 106, name: "Набор VAG/BMW клипс", cat: "КРЕПЕЖ", price: 1200, img: "part_6.png", desc: "Профессиональный набор крепежных клипс для дверных карт и обшивки. Незаменимо при разборке салона.", badges: ["OEM Качество", "50 штук"] }
+let productsDB = [
+    { id: 101, name: "Legenda 4", cat: "ВИБРОИЗОЛЯЦИЯ", price: 650, img: "/img/part_1.png", desc: "Премиальная виброизоляция. Эффективно убирает гул металла и структурные вибрации.", badges: ["Убирает гул", "Толщина 4мм"] },
+    { id: 102, name: "Relief", cat: "ЗВУКОПОГЛОТИТЕЛЬ", price: 850, img: "/img/part_2.png", desc: "Звукопоглощающий материал. Отлично поглощает шум и убирает эффект эха в дверях.", badges: ["Поглощает шум", "Анти-эхо"] },
+    { id: 103, name: "Legenda 1.5", cat: "АНТИСКРИП", price: 450, img: "/img/part_3.png", desc: "Тонкий материал для обработки дверных карт. Полностью убирает скрипы пластиковой обшивки.", badges: ["Убирает скрип", "Для обшивки"] },
+    { id: 104, name: "Legenda 2", cat: "ИЗОЛЯЦИЯ", price: 550, img: "/img/part_4.png", desc: "Материал для закрытия технологических отверстий. Создает герметичный короб для идеального звучания динамика.", badges: ["Герметичность", "Для автозвука"] },
+    { id: 105, name: "Обезжириватель (Спирт)", cat: "РАСХОДНИКИ", price: 350, img: "/img/part_5.png", desc: "Профессиональный изопропиловый спирт для подготовки поверхностей перед оклейкой и шумоизоляцией.", badges: ["Очистка 99%", "Без разводов"] },
+    { id: 106, name: "Набор VAG/BMW клипс", cat: "КРЕПЕЖ", price: 1200, img: "/img/part_6.png", desc: "Профессиональный набор крепежных клипс для дверных карт и обшивки. Незаменимо при разборке салона.", badges: ["OEM Качество", "50 штук"] }
 ];
+
+const externalProducts = Array.isArray(window.EXTERNAL_PRODUCTS) ? window.EXTERNAL_PRODUCTS : [];
+if (externalProducts.length) {
+    const knownIds = new Set(productsDB.map(product => String(product.id)));
+    externalProducts.forEach(product => {
+        if (!product || !product.id || knownIds.has(String(product.id))) return;
+        productsDB.push(product);
+        knownIds.add(String(product.id));
+    });
+}
 
 const carBrands = ["BMW X5", "BMW X6", "Li L9", "Zeekr 001", "Porsche Cayenne", "Mercedes G-Class"];
 const carDB = {
-    "bmw x5": { img: "car_bmw_x5.webp", specs: "G05 • 3.0D / 4.4i • M-Sport" },
-    "li l9": { img: "car_li_l9.webp", specs: "EREV • Max/Pro • 21' Wheels" },
-    "zeekr 001": { img: "car_zeekr_001.png", specs: "YOU/ME/WE • Z-Sport" }
+    "bmw x5": { img: "/img/car_bmw_x5.webp", specs: "G05 • 3.0D / 4.4i • M-Sport" },
+    "li l9": { img: "/img/car_li_l9.webp", specs: "EREV • Max/Pro • 21' Wheels" },
+    "zeekr 001": { img: "/img/car_zeekr_001.png", specs: "YOU/ME/WE • Z-Sport" }
 };
 
 let userPoints = parseInt(localStorage.getItem('williPoints')) || 500;
 let cart = JSON.parse(localStorage.getItem('williCart')) || [];
+let checkoutFormState = JSON.parse(localStorage.getItem('williCheckoutForm') || '{}');
+let map = null;
+let myPlacemark = null;
+let pvzCollection = null;
+let yandexMapsLoader = null;
+const pickupProviders = {
+    yandex: { label: 'Яндекс Маркет', query: 'Яндекс Маркет пункт выдачи', accent: '#FC3F1D' },
+    post: { label: 'Почта России', query: 'Почта России', accent: '#005BFF' },
+    cdek: { label: 'СДЭК', query: 'СДЭК пункт выдачи', accent: '#19A54A' }
+};
+
 
 document.addEventListener('DOMContentLoaded', () => {
     initTheme();
@@ -45,6 +66,8 @@ document.addEventListener('DOMContentLoaded', () => {
     updatePointsUI();
     updateCartUI();
     renderGrids();
+    renderHomeCatalog();
+    initCheckoutPanel();
     initLegalModals(); // Инициализация правовых документов
 });
 
@@ -52,15 +75,22 @@ window.addEventListener('hashchange', setActiveMenuLink);
 
 function setActiveMenuLink() {
     const links = document.querySelectorAll('.nav-link');
-    let currentPath = window.location.pathname.split('/').pop() || 'index.html';
-    let currentHash = window.location.hash;
+    const currentUrl = new URL(window.location.href);
     links.forEach(link => {
         link.classList.remove('active');
         const href = link.getAttribute('href');
-        if (href.includes('#')) {
-            if (href === currentPath + currentHash) link.classList.add('active');
-        } else {
-            if (href === currentPath && currentHash === '') link.classList.add('active');
+        if (!href) return;
+
+        const linkUrl = new URL(href, window.location.origin);
+        const isSamePath = linkUrl.pathname === currentUrl.pathname;
+        const isHashLink = Boolean(linkUrl.hash);
+
+        if (isHashLink) {
+            if (isSamePath && linkUrl.hash === currentUrl.hash) {
+                link.classList.add('active');
+            }
+        } else if (isSamePath && currentUrl.hash === '') {
+            link.classList.add('active');
         }
     });
 }
@@ -190,6 +220,60 @@ function renderGrids() {
                 </div>`;
         });
     }
+}
+
+function renderHomeCatalog() {
+    const tabsContainer = document.getElementById('homeCatalogTabs');
+    const slider = document.getElementById('homeCatalogSlider');
+    if (!tabsContainer || !slider) return;
+
+    const categories = ['ВСЕ', ...new Set(productsDB.map(product => product.cat))];
+    const activeCategory = tabsContainer.dataset.activeCategory || 'ВСЕ';
+
+    tabsContainer.innerHTML = categories.map(category => `
+        <button class="home-catalog-tab ${category === activeCategory ? 'active' : ''}" data-category="${category}">${category}</button>
+    `).join('');
+
+    const filteredProducts = activeCategory === 'ВСЕ'
+        ? productsDB
+        : productsDB.filter(product => product.cat === activeCategory);
+
+    slider.innerHTML = `
+        <div class="home-catalog-track">
+            ${filteredProducts.map(product => `
+                <article class="product-card home-catalog-card">
+                    <button class="wishlist-btn" onclick="showToast('Добавлено в избранное', 'success', 'fa-heart')"><i class="fa-regular fa-heart"></i></button>
+                    <div class="product-image" onclick="openDetailModal('product', ${product.id})">
+                        <img src="${product.img}" alt="${product.name}" onerror="this.src='https://via.placeholder.com/400x400/f4f5f7/cccccc?text=ТОВАР'">
+                    </div>
+                    <div class="product-meta">
+                        <h3 class="product-title">${product.name}</h3>
+                        <p class="product-desc">${product.cat}</p>
+                        <div class="product-price">${product.price.toLocaleString()} ₽</div>
+                    </div>
+                    <div class="product-action home-catalog-action">
+                        <button class="add-cart-btn" onclick="addToCart('${product.name}', ${product.price})">В корзину</button>
+                    </div>
+                </article>
+            `).join('')}
+        </div>
+    `;
+
+    tabsContainer.querySelectorAll('.home-catalog-tab').forEach(button => {
+        button.addEventListener('click', () => {
+            tabsContainer.dataset.activeCategory = button.dataset.category;
+            renderHomeCatalog();
+        });
+    });
+
+    updateHomeCatalogSummary();
+}
+
+function updateHomeCatalogSummary() {
+    const sumNode = document.getElementById('homeCatalogCartSum');
+    if (!sumNode) return;
+    const sum = cart.reduce((acc, item) => acc + item.price, 0);
+    sumNode.innerText = `${sum.toLocaleString()} ₽`;
 }
 
 function ensureModalExists() {
@@ -329,6 +413,270 @@ function handleConfiguratorAdd(btn, name, price) {
     setTimeout(() => { btn.classList.remove('checked'); btn.innerHTML = '<i class="fa-solid fa-plus"></i>'; }, 2000);
 }
 
+function initCheckoutPanel() {
+    const sidebar = document.getElementById('cartSidebar');
+    const list = document.getElementById('cartList');
+    if (!sidebar || !list || document.getElementById('cartCheckoutPanel')) return;
+
+    const panel = document.createElement('div');
+    panel.id = 'cartCheckoutPanel';
+    panel.className = 'cart-checkout-panel';
+    panel.innerHTML = `
+        <div class="cart-form-grid">
+            <div class="cart-form-field">
+                <label for="checkoutName">ФИО</label>
+                <input id="checkoutName" class="cart-form-input" data-checkout-field="name" type="text" placeholder="Иванов Иван Иванович" value="${checkoutFormState.name || ''}">
+            </div>
+            <div class="cart-form-field">
+                <label for="checkoutPhone">Телефон</label>
+                <input id="checkoutPhone" class="cart-form-input" data-checkout-field="phone" type="tel" placeholder="+7 (999) 123-45-67" value="${checkoutFormState.phone || ''}">
+            </div>
+            <div class="cart-form-field">
+                <label for="checkoutEmail">Email</label>
+                <input id="checkoutEmail" class="cart-form-input" data-checkout-field="email" type="email" placeholder="name@email.com" value="${checkoutFormState.email || ''}">
+            </div>
+            <div class="cart-form-field cart-form-field-address">
+                <label for="address">Адрес</label>
+                <input id="address" class="cart-form-input" data-checkout-field="address" type="text" placeholder="Название ПВЗ: адрес" value="${checkoutFormState.address || ''}" autocomplete="off">
+                <div id="suggestions-container" class="suggestions-container"></div>
+            </div>
+        </div>
+        <div class="pickup-map-block">
+            <div class="pickup-map-header">
+                <div>Выберите адрес на карте или найдите ПВЗ</div>
+                <span id="pickupMapStatus" class="pickup-map-status">Кликните по карте, введите адрес или нажмите на службу доставки</span>
+            </div>
+            <div id="pickupProviderButtons" class="pickup-provider-buttons">
+                <button type="button" class="pickup-provider-btn" onclick="loadPVZ('yandex')">Яндекс Маркет</button>
+                <button type="button" class="pickup-provider-btn" onclick="loadPVZ('pochta')">Почта России</button>
+                <button type="button" class="pickup-provider-btn" onclick="loadPVZ('sdek')">СДЭК</button>
+            </div>
+            <div id="map" class="pickup-map"></div>
+        </div>
+    `;
+
+    list.insertAdjacentElement('afterend', panel);
+
+    document.querySelectorAll('[data-checkout-field]').forEach(input => {
+        input.addEventListener('input', event => {
+            checkoutFormState[event.target.dataset.checkoutField] = event.target.value;
+            localStorage.setItem('williCheckoutForm', JSON.stringify(checkoutFormState));
+            validateCheckout();
+        });
+    });
+
+    loadYandexMaps()
+        .then(ymaps => ymaps.ready(initMap))
+        .catch(error => {
+            console.error(error);
+            const status = document.getElementById('pickupMapStatus');
+            if (status) status.textContent = 'Не удалось загрузить Яндекс Карты.';
+        });
+}
+
+function validateCheckout() {
+    localStorage.setItem('williCheckoutForm', JSON.stringify(checkoutFormState));
+}
+
+async function loadYandexMaps() {
+    if (window.ymaps) {
+        return window.ymaps;
+    }
+    if (!yandexMapsLoader) {
+        yandexMapsLoader = fetch('/config')
+            .then(resp => resp.json())
+            .then(data => new Promise((resolve, reject) => {
+                const apiKey = data.YANDEX_MAPS_API_KEY;
+                if (!apiKey) {
+                    reject(new Error('YANDEX_MAPS_API_KEY is not configured'));
+                    return;
+                }
+
+                const script = document.createElement('script');
+                script.src = `https://api-maps.yandex.ru/2.1/?apikey=${apiKey}&lang=ru_RU`;
+                script.onload = () => resolve(window.ymaps);
+                script.onerror = () => reject(new Error('Yandex Maps script failed to load'));
+                document.head.appendChild(script);
+            }));
+    }
+    return yandexMapsLoader;
+}
+
+function initMap() {
+    if (map) return;
+
+    const mapContainer = document.getElementById('map');
+    const addressInput = document.getElementById('address');
+    const suggestionsContainer = document.getElementById('suggestions-container');
+    const status = document.getElementById('pickupMapStatus');
+
+    if (!mapContainer || !addressInput || typeof ymaps === 'undefined') return;
+
+    map = new ymaps.Map('map', {
+        center: [55.755864, 37.617698],
+        zoom: 4,
+        controls: ['zoomControl', 'fullscreenControl']
+    });
+
+    pvzCollection = new ymaps.GeoObjectCollection();
+
+    ymaps.geolocation.get({ provider: 'yandex', mapStateAutoApply: true }).then(function(result) {
+        result.geoObjects.options.set('preset', 'islands#blueCircleIcon');
+        const bounds = result.geoObjects.get(0)?.properties.get('boundedBy');
+        if (bounds) {
+            map.setBounds(bounds, { checkZoomRange: true });
+        } else {
+            const coords = result.geoObjects.get(0)?.geometry.getCoordinates();
+            if (coords) map.setCenter(coords, 12);
+        }
+    }).catch(() => {});
+
+    map.events.add('click', function(e) {
+        const coords = e.get('coords');
+        setPlacemark(coords);
+        getAddress(coords);
+    });
+
+    addressInput.addEventListener('input', function() {
+        const query = addressInput.value;
+        checkoutFormState.address = query;
+        validateCheckout();
+
+        if (query.length < 3) {
+            suggestionsContainer.innerHTML = '';
+            suggestionsContainer.style.display = 'none';
+            return;
+        }
+
+        ymaps.suggest(query).then(function(items) {
+            suggestionsContainer.innerHTML = '';
+            if (items.length > 0) {
+                suggestionsContainer.style.display = 'block';
+                items.forEach(function(item) {
+                    const div = document.createElement('div');
+                    div.className = 'suggestion-item';
+                    div.textContent = item.displayName;
+
+                    div.onclick = function() {
+                        addressInput.value = item.value;
+                        checkoutFormState.address = item.value;
+                        suggestionsContainer.style.display = 'none';
+                        validateCheckout();
+
+                        ymaps.geocode(item.value).then(res => {
+                            const firstGeoObject = res.geoObjects.get(0);
+                            if (firstGeoObject) {
+                                const coords = firstGeoObject.geometry.getCoordinates();
+                                map.setCenter(coords, 15);
+                                setPlacemark(coords);
+                            }
+                        });
+                    };
+                    suggestionsContainer.appendChild(div);
+                });
+            } else {
+                suggestionsContainer.style.display = 'none';
+            }
+        });
+    });
+
+    document.addEventListener('click', function(event) {
+        if (!suggestionsContainer.contains(event.target) && event.target !== addressInput) {
+            suggestionsContainer.style.display = 'none';
+        }
+    });
+
+    if (status) status.textContent = 'Карта готова: выберите точку на карте или найдите ПВЗ';
+}
+
+function setPlacemark(coords) {
+    if (!map) return;
+
+    if (myPlacemark) {
+        myPlacemark.geometry.setCoordinates(coords);
+    } else {
+        myPlacemark = new ymaps.Placemark(coords, {}, {
+            preset: 'islands#violetDotIconWithCaption',
+            draggable: true
+        });
+        map.geoObjects.add(myPlacemark);
+        myPlacemark.events.add('dragend', function() {
+            getAddress(myPlacemark.geometry.getCoordinates());
+        });
+    }
+}
+
+function getAddress(coords) {
+    const addressInput = document.getElementById('address');
+    const status = document.getElementById('pickupMapStatus');
+    if (!myPlacemark || !addressInput) return;
+
+    myPlacemark.properties.set('iconCaption', 'поиск...');
+    ymaps.geocode(coords).then(function(res) {
+        const firstGeoObject = res.geoObjects.get(0);
+        if (!firstGeoObject) return;
+        const address = firstGeoObject.getAddressLine();
+        addressInput.value = address;
+        checkoutFormState.address = address;
+        addressInput.dispatchEvent(new Event('input'));
+        myPlacemark.properties.set({
+            iconCaption: firstGeoObject.properties.get('name'),
+            balloonContent: address
+        });
+        if (status) status.textContent = `Выбран адрес: ${address}`;
+    });
+}
+
+window.loadPVZ = function(type) {
+    const addressInput = document.getElementById('address');
+    const status = document.getElementById('pickupMapStatus');
+    if (!map || !addressInput || typeof ymaps === 'undefined') return;
+
+    map.geoObjects.remove(pvzCollection);
+    pvzCollection = new ymaps.GeoObjectCollection();
+
+    let query, presetColor, label;
+    if (type === 'sdek') { query = 'СДЭК'; presetColor = 'islands#greenDotIconWithCaption'; label = 'СДЭК'; }
+    else if (type === 'pochta') { query = 'Почта России'; presetColor = 'islands#blueDotIconWithCaption'; label = 'Почта России'; }
+    else { query = 'Яндекс Маркет'; presetColor = 'islands#redDotIconWithCaption'; label = 'Яндекс Маркет'; }
+
+    document.querySelectorAll('.pickup-provider-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.textContent.trim() === label);
+    });
+
+    if (status) status.textContent = `Ищем пункты выдачи: ${label}...`;
+
+    ymaps.search(query, { boundedBy: map.getBounds(), strictBounds: false, results: 10 }).then(function(res) {
+        res.geoObjects.each(function(obj) {
+            const title = obj.properties.get('name') || label;
+            const address = obj.properties.get('description') || title;
+            const coords = obj.geometry.getCoordinates();
+            const placemark = new ymaps.Placemark(coords, {
+                balloonContent: address,
+                iconCaption: title
+            }, { preset: presetColor });
+
+            placemark.events.add('click', function() {
+                addressInput.value = `${title}: ${address}`;
+                checkoutFormState.address = addressInput.value;
+                validateCheckout();
+                if (status) status.textContent = `Выбран пункт выдачи: ${title}`;
+            });
+
+            pvzCollection.add(placemark);
+        });
+
+        map.geoObjects.add(pvzCollection);
+
+        if (pvzCollection.getLength() > 0) {
+            map.setBounds(pvzCollection.getBounds(), { checkZoomRange: true, zoomMargin: 20 });
+            if (status) status.textContent = `Показаны пункты выдачи: ${label}. Нажмите на маркер.`;
+        } else if (status) {
+            status.textContent = `В видимой области карты не найдено пунктов «${label}». Переместите карту и попробуйте снова.`;
+        }
+    });
+}
+
 function updateCartUI() {
     document.querySelectorAll('.cart-count').forEach(el => el.innerText = cart.length);
     const list = document.getElementById('cartList');
@@ -349,6 +697,7 @@ function updateCartUI() {
         });
     }
     total.innerText = sum.toLocaleString() + ' ₽';
+    updateHomeCatalogSummary();
 }
 
 function addToCart(name, price) {
