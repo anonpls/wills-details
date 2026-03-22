@@ -236,6 +236,7 @@
         </div>
     </div>
 
+    <script>window.EXTERNAL_PRODUCTS = {{ external_products|default([], true)|tojson }};</script>
     <script src="{{ cache_buster('script.js') }}"></script>
 </body>
 </html>
