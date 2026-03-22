@@ -9,6 +9,7 @@ import uuid
 import re
 import time
 import json
+import logging
 from urllib.parse import urljoin
 from xml.etree import ElementTree as ET
 from bs4 import BeautifulSoup
@@ -24,11 +25,16 @@ Configuration.configure(os.getenv('SHOP_ID'), os.getenv('YOOKASSA_SECRET_KEY'))
 application = Flask(__name__)
 
 EXTERNAL_PRODUCTS_CACHE = {"data": [], "expires_at": 0}
+if not logging.getLogger().handlers:
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
+SCRAPER_LOGGER = logging.getLogger("external_products")
 
 
 def _fetch_url(url, timeout=20):
+    SCRAPER_LOGGER.info("Fetching URL: %s", url)
     response = requests.get(url, timeout=timeout, headers={"User-Agent": "Mozilla/5.0"})
     response.raise_for_status()
+    SCRAPER_LOGGER.info("Fetched URL: %s (status=%s, bytes=%s)", url, response.status_code, len(response.text))
     return response.text
 
 
@@ -58,6 +64,7 @@ def _extract_price(soup):
 
 
 def _extract_product(url, source_name, fallback_category):
+    SCRAPER_LOGGER.info("Parsing product page: %s (%s)", url, source_name)
     html = _fetch_url(url)
     soup = BeautifulSoup(html, 'html.parser')
 
@@ -68,6 +75,7 @@ def _extract_product(url, source_name, fallback_category):
     if not title and soup.find('h1'):
         title = soup.find('h1').get_text(' ', strip=True)
     if not title:
+        SCRAPER_LOGGER.warning("Skip product without title: %s", url)
         return None
 
     image = None
@@ -93,9 +101,11 @@ def _extract_product(url, source_name, fallback_category):
 
     price = _extract_price(soup)
     if not price:
+        SCRAPER_LOGGER.warning("Skip product without price: %s", url)
         return None
 
     slug = re.sub(r'[^a-z0-9]+', '-', title.lower()).strip('-')
+    SCRAPER_LOGGER.info("Parsed product: %s | %s ₽ | %s", title, price, source_name)
     return {
         'id': f'ext-{source_name.lower()}-{slug}',
         'name': title,
@@ -119,13 +129,17 @@ def _extract_urls_from_sitemap(sitemap_url, url_filter, limit):
             urls.append(value)
         if len(urls) >= limit:
             break
+    SCRAPER_LOGGER.info("Sitemap %s yielded %s candidate URLs", sitemap_url, len(urls))
     return urls
 
 
 def get_external_products(limit_per_source=6):
     now = time.time()
     if EXTERNAL_PRODUCTS_CACHE['data'] and EXTERNAL_PRODUCTS_CACHE['expires_at'] > now:
+        SCRAPER_LOGGER.info("Using cached external products: %s items", len(EXTERNAL_PRODUCTS_CACHE['data']))
         return EXTERNAL_PRODUCTS_CACHE['data']
+
+    SCRAPER_LOGGER.info("Refreshing external products cache")
 
     products = []
     sources = [
@@ -151,25 +165,35 @@ def get_external_products(limit_per_source=6):
     ]
 
     for source in sources:
+        SCRAPER_LOGGER.info("Loading source: %s", source['name'])
         source_urls = []
         for sitemap_url in source['sitemaps']:
             try:
                 source_urls = _extract_urls_from_sitemap(sitemap_url, source['filter'], limit_per_source)
-            except Exception:
+            except Exception as exc:
+                SCRAPER_LOGGER.warning("Failed sitemap %s for %s: %s", sitemap_url, source['name'], exc)
                 continue
             if source_urls:
                 break
 
+        if not source_urls:
+            SCRAPER_LOGGER.warning("No product URLs found for source: %s", source['name'])
+            continue
+
         for url in source_urls[:limit_per_source]:
             try:
                 product = _extract_product(url, source['name'], source['category'])
-            except Exception:
+            except Exception as exc:
+                SCRAPER_LOGGER.warning("Failed product parse %s: %s", url, exc)
                 product = None
             if product:
                 products.append(product)
 
+        SCRAPER_LOGGER.info("Source %s produced %s products so far", source['name'], len([p for p in products if p.get('source') == source['name']]))
+
     EXTERNAL_PRODUCTS_CACHE['data'] = products
     EXTERNAL_PRODUCTS_CACHE['expires_at'] = now + 60 * 60 * 6
+    SCRAPER_LOGGER.info("External products refresh complete: %s items", len(products))
     return products
 
 
