@@ -270,6 +270,27 @@ def reviews():
 def science():
     return render_template('science.html')
 
+
+@application.route('/services')
+def services():
+    return render_template('services.html')
+
+@application.route('/shop')
+def shop():
+    return render_template('shop.html')
+
+@application.route('/comments')
+def comments():
+    return render_template('comments.html')
+
+@application.route('/configurator')
+def configurator():
+    return render_template('configurator.html')
+
+@application.route('/img/<path:filename>')
+def image_file(filename):
+    return send_from_directory('img', filename)
+
 @application.route('/<path:path>')
 def static_file(path):
     return send_from_directory('.', path)

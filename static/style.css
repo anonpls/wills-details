@@ -437,9 +437,15 @@ header.header-hidden { transform: translateY(-100%); }
     background: var(--bg-card); z-index: 3001; padding: 40px 30px; 
     box-shadow: -20px 0 60px rgba(0,0,0,0.15); border-left: 1px solid var(--border-color);
     transform: translateX(100%); transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1); 
-    display: flex; flex-direction: column; 
+    display: flex; flex-direction: column; overflow-y: auto; overflow-x: hidden; scrollbar-gutter: stable;
 }
+.cart-sidebar::-webkit-scrollbar { width: 8px; }
+.cart-sidebar::-webkit-scrollbar-track { background: transparent; }
+.cart-sidebar::-webkit-scrollbar-thumb { background: rgba(127, 127, 127, 0.35); border-radius: 999px; }
+.cart-sidebar::-webkit-scrollbar-thumb:hover { background: rgba(127, 127, 127, 0.55); }
 .cart-sidebar.open { transform: translateX(0); }
+#cartList { flex: 0 0 auto !important; overflow: visible !important; min-height: auto; margin-bottom: 24px; }
+
 
 /* =========================================
    CUSTOM TOAST NOTIFICATIONS (Никаких alert)
@@ -899,3 +905,142 @@ a:hover, button:hover, .product-card:hover, .logo:hover, .nav-link:hover, .theme
 #legalModalBody::-webkit-scrollbar { width: 4px; }
 #legalModalBody::-webkit-scrollbar-track { background: transparent; }
 #legalModalBody::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 4px; }
+
+.cart-checkout-panel {
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border-color);
+}
+
+.cart-form-grid {
+    display: grid;
+    gap: 14px;
+    margin-bottom: 22px;
+}
+
+.cart-form-field {
+    display: grid;
+    gap: 8px;
+}
+
+.cart-form-field label,
+.pickup-map-header {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+.cart-form-input {
+    width: 100%;
+    padding: 14px 16px;
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    background: var(--bg-card);
+    color: var(--text-main);
+    font-size: 14px;
+}
+
+.cart-form-input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.12);
+}
+
+.pickup-map-block {
+    display: grid;
+    gap: 14px;
+}
+
+.pickup-map-header {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.pickup-map-status {
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: none;
+    letter-spacing: normal;
+    color: var(--text-main);
+}
+
+.pickup-provider-buttons {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.pickup-provider-btn {
+    border: 1px solid var(--border-color);
+    background: var(--bg-card);
+    color: var(--text-main);
+    padding: 12px 10px;
+    border-radius: 14px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.25s ease;
+}
+
+.pickup-provider-btn:hover,
+.pickup-provider-btn.active {
+    background: var(--text-main);
+    color: var(--bg-main);
+    border-color: var(--text-main);
+}
+
+.pickup-map {
+    width: 100%;
+    height: 280px;
+    border-radius: 18px;
+    overflow: hidden;
+    background: var(--border-color);
+}
+
+@media (max-width: 640px) {
+    .pickup-provider-buttons {
+        grid-template-columns: 1fr;
+    }
+
+    .pickup-map {
+        height: 240px;
+    }
+}
+
+.suggestions-container {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    display: none;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.12);
+    overflow: hidden;
+    z-index: 12;
+}
+
+.cart-form-field-address {
+    position: relative;
+}
+
+.suggestion-item {
+    padding: 12px 14px;
+    font-size: 13px;
+    color: var(--text-main);
+    cursor: pointer;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--bg-card);
+}
+
+.suggestion-item:last-child {
+    border-bottom: none;
+}
+
+.suggestion-item:hover {
+    background: var(--border-color);
+}
