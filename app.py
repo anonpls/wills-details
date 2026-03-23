@@ -13,6 +13,8 @@ import logging
 from urllib.parse import urljoin
 from xml.etree import ElementTree as ET
 from bs4 import BeautifulSoup
+import cloudscraper
+import random
 
 dotenv.load_dotenv()
 
@@ -39,13 +41,45 @@ DEFAULT_HEADERS = {
     "Upgrade-Insecure-Requests": "1"
 }
 
-def _fetch_url(url, timeout=20):
-    SCRAPER_LOGGER.info("Fetching URL: %s", url)
-    # Use a session for better connection handling
-    with requests.Session() as session:
-        response = session.get(url, timeout=timeout, headers=DEFAULT_HEADERS)
+
+def _fetch_url(url, timeout=25):
+    """
+    Fetches URL using cloudscraper to bypass SSL fingerprinting/WAF.
+    Replaces the standard requests logic.
+    """
+    SCRAPER_LOGGER.info("Attempting to fetch with cloudscraper: %s", url)
+    try:
+        # Create a scraper that mimics Chrome on Windows
+        scraper = cloudscraper.create_scraper(
+            browser={
+                'browser': 'chrome',
+                'platform': 'windows',
+                'desktop': True
+            }
+        )
+        
+        # Add delay to look more human
+        time.sleep(random.uniform(1.5, 3.0))
+        
+        response = scraper.get(url, timeout=timeout)
         response.raise_for_status()
+        
+        SCRAPER_LOGGER.info("Success! Fetched: %s (%s bytes)", url, len(response.text))
         return response.text
+    except Exception as e:
+        SCRAPER_LOGGER.error("Cloudscraper failed for %s: %s", url, e)
+        # If cloudscraper fails, try a desperate fallback without SSL verification
+        try:
+            SCRAPER_LOGGER.info("Trying fallback without SSL verification...")
+            import urllib3
+            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+            
+            resp = requests.get(url, headers=DEFAULT_HEADERS, timeout=timeout, verify=False)
+            resp.raise_for_status()
+            return resp.text
+        except Exception as e2:
+            SCRAPER_LOGGER.error("Final fallback failed: %s", e2)
+            return None
 
 def _extract_price(soup):
     for script in soup.find_all('script', type='application/ld+json'):
