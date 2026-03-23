@@ -18,19 +18,10 @@ THREAD_ID = os.getenv('THREAD_ID')
 Configuration.configure(os.getenv('SHOP_ID'), os.getenv('YOOKASSA_SECRET_KEY'))
 
 application = Flask(__name__)
-application.secret_key = os.getenv('FLASK_SECRET_KEY', 'dev-secret-key-change-me')
-
-DB_PATH = os.path.join(os.path.dirname(__file__), 'cabinet.db')
-
-
-def get_db_connection():
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    return conn
 
 
 def init_db():
-    conn = get_db_connection()
+    conn = sqlite3.connect('cabinet.db')
     cursor = conn.cursor()
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS users (
@@ -58,21 +49,21 @@ def init_db():
 
 
 def get_user_by_id(user_id):
-    conn = get_db_connection()
+    conn = sqlite3.connect('cabinet.db')
     user = conn.execute('SELECT id, name, phone, email, points, created_at FROM users WHERE id = ?', (user_id,)).fetchone()
     conn.close()
     return user
 
 
 def get_user_with_password(phone):
-    conn = get_db_connection()
+    conn = sqlite3.connect('cabinet.db')
     user = conn.execute('SELECT * FROM users WHERE phone = ?', (phone,)).fetchone()
     conn.close()
     return user
 
 
 def get_user_transactions(user_id, limit=10):
-    conn = get_db_connection()
+    conn = sqlite3.connect('cabinet.db')
     rows = conn.execute(
         'SELECT amount, description, created_at FROM point_transactions WHERE user_id = ? ORDER BY id DESC LIMIT ?',
         (user_id, limit)
@@ -82,7 +73,7 @@ def get_user_transactions(user_id, limit=10):
 
 
 def add_points(user_id, amount, description):
-    conn = get_db_connection()
+    conn = sqlite3.connect('cabinet.db')
     conn.execute('UPDATE users SET points = points + ? WHERE id = ?', (amount, user_id))
     conn.execute(
         'INSERT INTO point_transactions (user_id, amount, description, created_at) VALUES (?, ?, ?, ?)',
@@ -344,7 +335,7 @@ def cabinet_register():
     if get_user_with_password(phone):
         return jsonify({'status': 'error', 'message': 'Пользователь с таким телефоном уже существует'}), 400
 
-    conn = get_db_connection()
+    conn = sqlite3.connect('cabinet.db')
     cursor = conn.cursor()
     cursor.execute(
         'INSERT INTO users (name, phone, email, password_hash, points, created_at) VALUES (?, ?, ?, ?, ?, ?)',
