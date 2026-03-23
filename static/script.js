@@ -32,7 +32,8 @@ const carDB = {
     "zeekr 001": { img: "/img/car_zeekr_001.png", specs: "YOU/ME/WE • Z-Sport" }
 };
 
-let userPoints = parseInt(localStorage.getItem('williPoints')) || 500;
+let userPoints = 0;
+let currentUser = null;
 let cart = JSON.parse(localStorage.getItem('williCart')) || [];
 let checkoutFormState = JSON.parse(localStorage.getItem('williCheckoutForm') || '{}');
 let map = null;
@@ -51,6 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initSmartHeader();
     initScrollReveal();
     initDatalist();
+    initUserCabinet();
     setActiveMenuLink(); 
     checkDailyBonus();   
     updatePointsUI();
@@ -334,16 +336,124 @@ function openDetailModal(type, id) {
     modal.classList.add('active');
 }
 
-function openCabinetModal() {
+async function initUserCabinet() {
+    try {
+        const response = await fetch('/api/cabinet/me');
+        const data = await response.json();
+        if (data.authenticated) {
+            currentUser = data.user;
+            userPoints = data.user.points || 0;
+        } else {
+            currentUser = null;
+            userPoints = 0;
+        }
+        updatePointsUI();
+    } catch (error) {
+        console.error('Cabinet init failed', error);
+    }
+}
+
+function buildCabinetAuthView() {
+    return `
+        <div style="display:grid; gap:14px; text-align:left; margin-top:20px;">
+            <input id="cabinetName" class="cart-form-input" type="text" placeholder="Имя (для регистрации)">
+            <input id="cabinetPhone" class="cart-form-input" type="tel" placeholder="Телефон">
+            <input id="cabinetEmail" class="cart-form-input" type="email" placeholder="Email (необязательно)">
+            <input id="cabinetPassword" class="cart-form-input" type="password" placeholder="Пароль">
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                <button class="btn btn-primary" onclick="submitCabinetAuth('login')">Войти</button>
+                <button class="btn btn-ghost" onclick="submitCabinetAuth('register')">Регистрация</button>
+            </div>
+        </div>
+    `;
+}
+
+function buildCabinetProfileView(transactions = []) {
+    const history = transactions.length ? transactions.map(item => `
+        <div style="display:flex; justify-content:space-between; gap:15px; padding:12px 0; border-bottom:1px solid var(--border-color); font-size:14px;">
+            <div>
+                <div style="font-weight:600;">${item.description}</div>
+                <div style="font-size:12px; color:var(--text-muted);">${new Date(item.created_at).toLocaleString('ru-RU')}</div>
+            </div>
+            <div style="font-weight:800; color:${item.amount >= 0 ? 'var(--accent)' : 'var(--text-main)'};">${item.amount >= 0 ? '+' : ''}${item.amount}</div>
+        </div>
+    `).join('') : '<div style="color:var(--text-muted); font-size:14px;">Пока нет операций по баллам.</div>';
+
+    return `
+        <div style="text-align:left; margin-top:20px;">
+            <div style="display:grid; gap:6px; margin-bottom:20px;">
+                <div style="font-weight:700; font-size:18px;">${currentUser.name}</div>
+                <div style="color:var(--text-muted); font-size:14px;">${currentUser.phone}</div>
+                <div style="color:var(--text-muted); font-size:14px;">${currentUser.email || 'Email не указан'}</div>
+            </div>
+            <div style="background:#000; color:#fff; padding:20px; border-radius:18px; margin-bottom:20px;">
+                <div style="font-size:11px; opacity:0.65; text-transform:uppercase; letter-spacing:0.08em;">Баланс</div>
+                <div style="font-size:38px; font-weight:900; font-family:var(--font-head);">${userPoints}</div>
+                <div style="font-size:12px; color:#aaa;">1 балл = 1 рубль</div>
+            </div>
+            <div style="font-size:12px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--text-muted); margin-bottom:12px;">История баллов</div>
+            <div style="max-height:220px; overflow:auto; padding-right:6px;">${history}</div>
+        </div>
+    `;
+}
+
+async function openCabinetModal() {
     ensureModalExists();
     const modal = document.getElementById('detailModal');
-    document.getElementById('dmImg').src = 'BMW.webp';
-    document.getElementById('dmTitle').innerText = "PRIVATE CLUB";
-    document.getElementById('dmPrice').innerHTML = `<i class="fa-solid fa-gem" style="color:var(--accent);"></i> ${userPoints.toLocaleString()} БАЛЛОВ`;
-    document.getElementById('dmDesc').innerHTML = `Вы состоите в закрытом клубе <b>WILLI MEDIA</b>.<br>Баллы можно использовать для оплаты услуг и запчастей при оформлении заказа. 1 балл = 1 рубль.`;
-    document.getElementById('dmBtn').innerText = "К КАТАЛОГУ";
-    document.getElementById('dmBtn').onclick = () => { closeDetailModal(); window.location.href = 'catalog.html'; };
+    const response = await fetch('/api/cabinet/me');
+    const data = await response.json();
+    if (data.authenticated) {
+        currentUser = data.user;
+        userPoints = data.user.points || 0;
+    }
+    document.getElementById('dmImg').src = '/img/BMW.webp';
+    document.getElementById('dmTitle').innerText = currentUser ? 'ЛИЧНЫЙ КАБИНЕТ' : 'PRIVATE CLUB';
+    document.getElementById('dmPrice').innerHTML = currentUser
+        ? `<i class="fa-solid fa-gem" style="color:var(--accent);"></i> ${userPoints.toLocaleString()} БАЛЛОВ`
+        : 'Вход и регистрация';
+    document.getElementById('dmDesc').innerHTML = currentUser
+        ? buildCabinetProfileView(data.transactions || [])
+        : `Зарегистрируйтесь, чтобы хранить бонусный баланс на сервере.${buildCabinetAuthView()}`;
+    document.getElementById('dmBtn').innerText = currentUser ? 'ВЫЙТИ' : 'К КАТАЛОГУ';
+    document.getElementById('dmBtn').onclick = currentUser
+        ? logoutCabinet
+        : () => { closeDetailModal(); window.location.href = '/catalog'; };
+    updatePointsUI();
     modal.classList.add('active');
+}
+
+async function submitCabinetAuth(mode) {
+    const payload = {
+        name: document.getElementById('cabinetName')?.value || '',
+        phone: document.getElementById('cabinetPhone')?.value || '',
+        email: document.getElementById('cabinetEmail')?.value || '',
+        password: document.getElementById('cabinetPassword')?.value || ''
+    };
+    const endpoint = mode === 'register' ? '/api/cabinet/register' : '/api/cabinet/login';
+    const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    });
+    const data = await response.json();
+    if (!response.ok) {
+        showToast(data.message || 'Ошибка кабинета', 'error');
+        return;
+    }
+    currentUser = data.user;
+    userPoints = data.user.points || 0;
+    updatePointsUI();
+    showToast(mode === 'register' ? 'Кабинет создан' : 'Вход выполнен', 'success');
+    openCabinetModal();
+}
+
+async function logoutCabinet() {
+    await fetch('/api/cabinet/logout', { method: 'POST' });
+    currentUser = null;
+    userPoints = 0;
+    updatePointsUI();
+    closeDetailModal();
+    showToast('Вы вышли из кабинета', 'success');
 }
 
 function closeDetailModal() { 
@@ -710,7 +820,9 @@ function toggleCart() {
 
 function updatePointsUI() {
     const headerPoints = document.getElementById('userPointsHeader');
+    const cabinetPoints = document.getElementById('cabinetPointsValue');
     if (headerPoints) headerPoints.innerText = userPoints.toLocaleString();
+    if (cabinetPoints) cabinetPoints.innerText = userPoints.toLocaleString();
 }
 
 function toggleMenu() {
