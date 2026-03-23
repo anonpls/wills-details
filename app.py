@@ -20,7 +20,7 @@ Configuration.configure(os.getenv('SHOP_ID'), os.getenv('YOOKASSA_SECRET_KEY'))
 application = Flask(__name__)
 application.secret_key = os.getenv('FLASK_SECRET_KEY', 'dev-secret-key-change-me')
 
-DB_PATH = os.path.join(os.path.dirname(__file__), 'cabinet.sqlite3')
+DB_PATH = os.path.join(os.path.dirname(__file__), 'cabinet.db')
 
 
 def get_db_connection():
