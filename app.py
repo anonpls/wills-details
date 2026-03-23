@@ -29,14 +29,23 @@ if not logging.getLogger().handlers:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 SCRAPER_LOGGER = logging.getLogger("external_products")
 
+# Updated headers to look more like a real browser
+DEFAULT_HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+    "Accept-Language": "ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7",
+    "Accept-Encoding": "gzip, deflate, br",
+    "Connection": "keep-alive",
+    "Upgrade-Insecure-Requests": "1"
+}
 
 def _fetch_url(url, timeout=20):
     SCRAPER_LOGGER.info("Fetching URL: %s", url)
-    response = requests.get(url, timeout=timeout, headers={"User-Agent": "Mozilla/5.0"})
-    response.raise_for_status()
-    SCRAPER_LOGGER.info("Fetched URL: %s (status=%s, bytes=%s)", url, response.status_code, len(response.text))
-    return response.text
-
+    # Use a session for better connection handling
+    with requests.Session() as session:
+        response = session.get(url, timeout=timeout, headers=DEFAULT_HEADERS)
+        response.raise_for_status()
+        return response.text
 
 def _extract_price(soup):
     for script in soup.find_all('script', type='application/ld+json'):
@@ -56,10 +65,18 @@ def _extract_price(soup):
                 if digits:
                     return int(float(digits))
 
-    text = soup.get_text(' ', strip=True)
-    match = re.search(r'(?:от\s*)?([\d\s]{2,})\s*₽', text)
+    meta_price = soup.find('meta', property='product:price:amount')
+    if meta_price:
+        return int(float(meta_price['content']))
+
+    # 3. Более агрессивный поиск по тексту
+    # Ищем цифры, за которыми следует символ рубля или 'руб'
+    text = soup.get_text(' ', strip=True).replace('\xa0', '') # Убираем неразрывные пробелы
+    match = re.search(r'(\d[\d\s]{1,})\s*(?:₽|руб)', text)
     if match:
-        return int(re.sub(r'\D', '', match.group(1)))
+        digits = re.sub(r'\D', '', match.group(1))
+        if digits:
+            return int(digits)
     return None
 
 
@@ -120,17 +137,29 @@ def _extract_product(url, source_name, fallback_category):
 
 
 def _extract_urls_from_sitemap(sitemap_url, url_filter, limit):
-    xml_text = _fetch_url(sitemap_url)
-    root = ET.fromstring(xml_text)
+    try:
+        xml_text = _fetch_url(sitemap_url)
+        root = ET.fromstring(xml_text)
+    except Exception as e:
+        SCRAPER_LOGGER.error(f"XML Parse error for {sitemap_url}: {e}")
+        return []
+
     urls = []
+    # Namespaces can be tricky in XML, {*} matches any namespace
     for loc in root.iter('{*}loc'):
-        value = (loc.text or '').strip()
-        if url_filter(value):
-            urls.append(value)
+        val = (loc.text or '').strip()
+        
+        # If we found another sitemap inside, crawl it too
+        if val.endswith('.xml'):
+            SCRAPER_LOGGER.info(f"Nested sitemap found: {val}")
+            urls.extend(_extract_urls_from_sitemap(val, url_filter, limit))
+        elif url_filter(val):
+            urls.append(val)
+            
         if len(urls) >= limit:
             break
-    SCRAPER_LOGGER.info("Sitemap %s yielded %s candidate URLs", sitemap_url, len(urls))
-    return urls
+            
+    return list(set(urls)) # Remove duplicates
 
 
 def get_external_products(limit_per_source=6):
