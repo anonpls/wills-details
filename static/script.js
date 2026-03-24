@@ -504,6 +504,48 @@ function getEntityLabel(entity, fallback) {
     return entity?.labels?.ru?.value || entity?.labels?.en?.value || fallback;
 }
 
+function isAutomotiveEntity(entity, candidate) {
+    const candidateText = `${candidate?.label || ''} ${candidate?.description || ''}`.toLowerCase();
+    const entityDescription = `${entity?.descriptions?.ru?.value || ''} ${entity?.descriptions?.en?.value || ''}`.toLowerCase();
+    const searchText = `${candidateText} ${entityDescription}`;
+    const automotiveKeywords = [
+        'автомобил',
+        'машин',
+        'car',
+        'automobile',
+        'motor vehicle',
+        'vehicle model',
+        'sedan',
+        'suv',
+        'crossover',
+        'hatchback',
+        'coupe',
+        'roadster',
+        'wagon',
+        'electric vehicle',
+        'pickup'
+    ];
+    const hasAutomotiveText = automotiveKeywords.some(keyword => searchText.includes(keyword));
+    if (!hasAutomotiveText) return false;
+
+    const p31Claims = entity?.claims?.P31 || [];
+    if (!p31Claims.length) return hasAutomotiveText;
+
+    const carTypeAllowlist = new Set([
+        'Q3231690', // automobile model
+        'Q1420',    // automobile
+        'Q752870',  // motor vehicle
+        'Q193692'   // electric vehicle
+    ]);
+
+    const hasCarType = p31Claims.some(claim => {
+        const value = claim?.mainsnak?.datavalue?.value;
+        return value?.id && carTypeAllowlist.has(value.id);
+    });
+
+    return hasCarType || hasAutomotiveText;
+}
+
 async function fetchWikidataImage(modelName) {
     const cache = getCarImageCache();
     const cacheKey = modelName.toLowerCase();
@@ -527,6 +569,7 @@ async function fetchWikidataImage(modelName) {
         const entityResp = await fetch(`https://www.wikidata.org/wiki/Special:EntityData/${entityId}.json`);
         const entityData = await entityResp.json();
         const entity = entityData?.entities?.[entityId];
+        if (!isAutomotiveEntity(entity, candidate)) continue;
         const imageFileName = getImageFromEntity(entity);
         if (!imageFileName) continue;
 
@@ -588,7 +631,7 @@ async function searchCar() {
             title.textContent = wikiResult.title.toUpperCase();
             specs.textContent = wikiResult.specs;
             renderConfiguratorParts(parts);
-            showToast('Модель найдена через Wikidata', 'success', 'fa-earth-europe');
+            showToast('Комплектующие найдены', 'success', 'fa-check-double');
             return;
         }
 
