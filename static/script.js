@@ -472,37 +472,137 @@ function initDatalist() {
     }
 }
 
-function searchCar() {
-    const input = document.getElementById('carInput').value.toLowerCase().trim();
+const WIKIDATA_CACHE_KEY = 'williCarImageCacheV1';
+
+function getCarImageCache() {
+    try {
+        return JSON.parse(localStorage.getItem(WIKIDATA_CACHE_KEY) || '{}');
+    } catch (e) {
+        return {};
+    }
+}
+
+function setCarImageCache(cache) {
+    try {
+        localStorage.setItem(WIKIDATA_CACHE_KEY, JSON.stringify(cache));
+    } catch (e) {
+        console.warn('Не удалось сохранить кэш изображений авто', e);
+    }
+}
+
+function decodeFileName(name) {
+    return name.replace(/_/g, ' ');
+}
+
+function getImageFromEntity(entity) {
+    const claims = entity?.claims || {};
+    const imageClaim = claims?.P18?.[0];
+    return imageClaim?.mainsnak?.datavalue?.value || null;
+}
+
+function getEntityLabel(entity, fallback) {
+    return entity?.labels?.ru?.value || entity?.labels?.en?.value || fallback;
+}
+
+async function fetchWikidataImage(modelName) {
+    const cache = getCarImageCache();
+    const cacheKey = modelName.toLowerCase();
+    const cacheEntry = cache[cacheKey];
+    const now = Date.now();
+    const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
+
+    if (cacheEntry && (now - cacheEntry.cachedAt) < sevenDaysMs) {
+        return cacheEntry;
+    }
+
+    const searchUrl = `https://www.wikidata.org/w/api.php?action=wbsearchentities&search=${encodeURIComponent(modelName)}&language=ru&uselang=ru&type=item&limit=5&format=json&origin=*`;
+    const searchResp = await fetch(searchUrl);
+    const searchData = await searchResp.json();
+    const candidates = searchData?.search || [];
+
+    for (const candidate of candidates) {
+        const entityId = candidate.id;
+        if (!entityId) continue;
+
+        const entityResp = await fetch(`https://www.wikidata.org/wiki/Special:EntityData/${entityId}.json`);
+        const entityData = await entityResp.json();
+        const entity = entityData?.entities?.[entityId];
+        const imageFileName = getImageFromEntity(entity);
+        if (!imageFileName) continue;
+
+        const commonsUrl = `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(decodeFileName(imageFileName))}`;
+        const result = {
+            image: commonsUrl,
+            title: getEntityLabel(entity, modelName),
+            specs: candidate.description || 'Источник: Wikidata'
+        };
+        cache[cacheKey] = { ...result, cachedAt: now };
+        setCarImageCache(cache);
+        return result;
+    }
+
+    return null;
+}
+
+function renderConfiguratorParts(parts) {
+    parts.innerHTML = '';
+    productsDB.slice(0, 3).forEach(p => {
+        parts.innerHTML += `
+            <div style="display:flex; justify-content:space-between; align-items:center; padding: 20px 0; border-bottom: 1px solid var(--border-color);">
+                <div><div style="font-weight:500; font-size:14px;">${p.name}</div><div style="color:var(--text-main); font-size:13px; font-weight:600;">${p.price.toLocaleString()} ₽</div></div>
+                <button onclick="handleConfiguratorAdd(this, '${p.name}', ${p.price})" class="config-plus-btn"><i class="fa-solid fa-plus"></i></button>
+            </div>`;
+    });
+}
+
+async function searchCar() {
+    const rawInput = document.getElementById('carInput').value.trim();
+    const input = rawInput.toLowerCase();
     if (input.length < 2) return;
     const resultDiv = document.getElementById('configResult');
     const img = document.getElementById('resImg');
     const title = document.getElementById('resTitle');
+    const specs = document.getElementById('resSpecs');
     const parts = document.getElementById('resParts');
     
     resultDiv.style.display = window.innerWidth < 900 ? 'flex' : 'grid';
     if(window.innerWidth < 900) resultDiv.style.flexDirection = 'column';
     resultDiv.style.opacity = '0.5';
-    showToast('Анализ...', 'success', 'fa-microchip');
+    showToast('Ищем модель...', 'success', 'fa-microchip');
 
-    setTimeout(() => {
-        resultDiv.style.opacity = '1';
+    try {
         const key = Object.keys(carDB).find(k => input.includes(k));
-        parts.innerHTML = '';
         if (key) {
             const car = carDB[key];
             img.src = car.img;
-            title.innerHTML = `${key.toUpperCase()}<span style="display:block; font-size:12px; color:var(--text-muted); margin-top:8px;">${car.specs}</span>`;
-            showToast(`Комплектующие найдены`, 'success', 'fa-check-double');
-            productsDB.slice(0, 3).forEach(p => {
-                parts.innerHTML += `
-                    <div style="display:flex; justify-content:space-between; align-items:center; padding: 20px 0; border-bottom: 1px solid var(--border-color);">
-                        <div><div style="font-weight:500; font-size:14px;">${p.name}</div><div style="color:var(--text-main); font-size:13px; font-weight:600;">${p.price.toLocaleString()} ₽</div></div>
-                        <button onclick="handleConfiguratorAdd(this, '${p.name}', ${p.price})" class="config-plus-btn"><i class="fa-solid fa-plus"></i></button>
-                    </div>`;
-            });
+            title.textContent = key.toUpperCase();
+            specs.textContent = car.specs;
+            renderConfiguratorParts(parts);
+            showToast('Комплектующие найдены', 'success', 'fa-check-double');
+            return;
         }
-    }, 1500);
+
+        const wikiResult = await fetchWikidataImage(rawInput);
+        if (wikiResult) {
+            img.src = wikiResult.image;
+            title.textContent = wikiResult.title.toUpperCase();
+            specs.textContent = wikiResult.specs;
+            renderConfiguratorParts(parts);
+            showToast('Модель найдена через Wikidata', 'success', 'fa-earth-europe');
+            return;
+        }
+
+        img.src = 'https://via.placeholder.com/1000x600/f4f5f7/cccccc?text=МОДЕЛЬ+НЕ+НАЙДЕНА';
+        title.textContent = rawInput.toUpperCase();
+        specs.textContent = 'Не нашли изображение. Попробуйте указать марку и кузов (например: BMW X5 G05)';
+        parts.innerHTML = '';
+        showToast('Не удалось найти изображение модели', 'error');
+    } catch (e) {
+        console.error(e);
+        showToast('Ошибка поиска модели', 'error');
+    } finally {
+        resultDiv.style.opacity = '1';
+    }
 }
 
 function handleConfiguratorAdd(btn, name, price) {
