@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WILLI MEDIA | Форум</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ cache_buster('style.css') }}">
+    <style>
+        .forum-layout { display:grid; grid-template-columns: 300px 1fr; gap: 24px; align-items:start; }
+        .forum-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 20px; box-shadow: var(--card-shadow); }
+        .forum-list { display:flex; flex-direction:column; gap: 12px; }
+        .forum-item { border: 1px solid var(--border-color); border-radius: 12px; padding: 12px; cursor: pointer; transition: .2s; }
+        .forum-item:hover, .forum-item.active { border-color: var(--accent); transform: translateY(-1px); }
+        .forum-topic { border: 1px solid var(--border-color); border-radius: 12px; padding: 14px; margin-bottom: 10px; cursor: pointer; }
+        .forum-post { border-left: 2px solid var(--accent); padding: 10px 12px; margin-bottom: 10px; background: rgba(0,0,0,.02); border-radius: 8px; }
+        .forum-meta { font-size: 12px; color: var(--text-muted); margin-top: 6px; }
+        .forum-input, .forum-textarea, .forum-select {
+            width: 100%; border: 1px solid var(--border-color); border-radius: 10px; padding: 10px; font-family: var(--font-body);
+            background: var(--bg-main); color: var(--text-main); margin-bottom: 10px;
+        }
+        .forum-textarea { min-height: 110px; resize: vertical; }
+        .forum-empty { color: var(--text-muted); font-size: 14px; }
+        @media(max-width: 980px) { .forum-layout { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container header-inner">
+            <a href="{{ url_for('index') }}" class="logo">WILLI <span>MEDIA</span></a>
+            <nav class="nav-links">
+                <a href="{{ url_for('index') }}" class="nav-link">Главная</a>
+                <a href="{{ url_for('services') }}" class="nav-link">Услуги</a>
+                <a href="{{ url_for('catalog') }}" class="nav-link">Каталог</a>
+                <a href="{{ url_for('forum') }}" class="nav-link active">Форум</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="section" style="padding-top:120px;">
+        <div class="container">
+            <h2 style="margin-bottom:20px;">FORUM <span style="color:#888;">COMMUNITY</span></h2>
+            <div class="forum-layout">
+                <aside class="forum-card">
+                    <h3 style="margin-bottom: 14px;">Разделы</h3>
+                    <div id="forumSections" class="forum-list"></div>
+                </aside>
+
+                <section class="forum-card">
+                    <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:12px; flex-wrap:wrap;">
+                        <h3 id="forumSectionTitle" style="margin:0;">Темы</h3>
+                        <button class="btn btn-primary" onclick="toggleTopicForm()">Новая тема</button>
+                    </div>
+
+                    <div id="topicForm" style="display:none; margin-bottom: 16px;">
+                        <select id="newTopicSection" class="forum-select"></select>
+                        <input id="newTopicTitle" class="forum-input" placeholder="Заголовок темы">
+                        <textarea id="newTopicBody" class="forum-textarea" placeholder="Первое сообщение"></textarea>
+                        <button class="btn btn-primary" onclick="createTopic()">Опубликовать тему</button>
+                    </div>
+
+                    <div id="forumTopics"></div>
+
+                    <div id="topicView" style="display:none; margin-top:18px; border-top:1px solid var(--border-color); padding-top:18px;">
+                        <h3 id="topicViewTitle"></h3>
+                        <div id="topicPosts"></div>
+                        <textarea id="replyBody" class="forum-textarea" placeholder="Ваш ответ"></textarea>
+                        <button class="btn btn-primary" onclick="createReply()">Ответить</button>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        let forumState = {
+            sections: [],
+            activeSectionId: null,
+            activeTopicId: null
+        };
+
+        document.addEventListener('DOMContentLoaded', initForum);
+
+        async function initForum() {
+            await loadSections();
+        }
+
+        async function loadSections() {
+            const resp = await fetch('/api/forum/sections');
+            const data = await resp.json();
+            forumState.sections = data.sections || [];
+            const sectionsRoot = document.getElementById('forumSections');
+            const select = document.getElementById('newTopicSection');
+            sectionsRoot.innerHTML = '';
+            select.innerHTML = '';
+
+            forumState.sections.forEach((section, idx) => {
+                const item = document.createElement('div');
+                item.className = `forum-item ${idx === 0 ? 'active' : ''}`;
+                item.innerHTML = `
+                    <div style="font-weight:600;">${section.title}</div>
+                    <div class="forum-meta">${section.description || ''}</div>
+                    <div class="forum-meta">Тем: ${section.topics_count} • Сообщений: ${section.posts_count}</div>
+                `;
+                item.onclick = () => {
+                    document.querySelectorAll('.forum-item').forEach(x => x.classList.remove('active'));
+                    item.classList.add('active');
+                    loadTopics(section.id, section.title);
+                };
+                sectionsRoot.appendChild(item);
+
+                const option = document.createElement('option');
+                option.value = section.id;
+                option.textContent = section.title;
+                select.appendChild(option);
+            });
+
+            if (forumState.sections[0]) {
+                loadTopics(forumState.sections[0].id, forumState.sections[0].title);
+            }
+        }
+
+        async function loadTopics(sectionId, sectionTitle) {
+            forumState.activeSectionId = sectionId;
+            document.getElementById('forumSectionTitle').textContent = `Темы: ${sectionTitle}`;
+            document.getElementById('topicView').style.display = 'none';
+            const root = document.getElementById('forumTopics');
+            root.innerHTML = 'Загрузка...';
+            const resp = await fetch(`/api/forum/topics?section_id=${sectionId}`);
+            const data = await resp.json();
+            const topics = data.topics || [];
+            if (!topics.length) {
+                root.innerHTML = '<div class="forum-empty">Пока нет тем. Создайте первую.</div>';
+                return;
+            }
+            root.innerHTML = topics.map(topic => `
+                <div class="forum-topic" onclick="openTopic(${topic.id})">
+                    <div style="font-weight:700;">${escapeHtml(topic.title)}</div>
+                    <div class="forum-meta">Автор: ${escapeHtml(topic.user_name)} • Сообщений: ${topic.posts_count} • Последняя активность: ${formatDate(topic.last_post_at || topic.created_at)}</div>
+                </div>
+            `).join('');
+        }
+
+        async function openTopic(topicId) {
+            forumState.activeTopicId = topicId;
+            const resp = await fetch(`/api/forum/posts?topic_id=${topicId}`);
+            const data = await resp.json();
+            if (!resp.ok) {
+                alert(data.message || 'Не удалось открыть тему');
+                return;
+            }
+            const topic = data.topic;
+            const posts = data.posts || [];
+            document.getElementById('topicView').style.display = 'block';
+            document.getElementById('topicViewTitle').textContent = topic.title;
+            document.getElementById('topicPosts').innerHTML = posts.map(post => `
+                <div class="forum-post">
+                    <div>${escapeHtml(post.body).replace(/\n/g, '<br>')}</div>
+                    <div class="forum-meta">${escapeHtml(post.user_name)} • ${formatDate(post.created_at)}</div>
+                </div>
+            `).join('');
+            window.scrollTo({ top: document.getElementById('topicView').offsetTop - 100, behavior: 'smooth' });
+        }
+
+        function toggleTopicForm() {
+            const form = document.getElementById('topicForm');
+            form.style.display = form.style.display === 'none' ? 'block' : 'none';
+        }
+
+        async function createTopic() {
+            const payload = {
+                section_id: Number(document.getElementById('newTopicSection').value),
+                title: document.getElementById('newTopicTitle').value,
+                body: document.getElementById('newTopicBody').value
+            };
+            const resp = await fetch('/api/forum/topics', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await resp.json();
+            if (!resp.ok) {
+                alert(data.message || 'Не удалось создать тему');
+                return;
+            }
+            document.getElementById('newTopicTitle').value = '';
+            document.getElementById('newTopicBody').value = '';
+            document.getElementById('topicForm').style.display = 'none';
+            await loadSections();
+            await openTopic(data.topic_id);
+        }
+
+        async function createReply() {
+            if (!forumState.activeTopicId) return;
+            const body = document.getElementById('replyBody').value.trim();
+            if (!body) return;
+            const resp = await fetch('/api/forum/posts', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ topic_id: forumState.activeTopicId, body })
+            });
+            const data = await resp.json();
+            if (!resp.ok) {
+                alert(data.message || 'Не удалось отправить ответ');
+                return;
+            }
+            document.getElementById('replyBody').value = '';
+            await openTopic(forumState.activeTopicId);
+            await loadTopics(forumState.activeSectionId, document.getElementById('forumSectionTitle').textContent.replace('Темы: ', ''));
+        }
+
+        function escapeHtml(value) {
+            const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+            return String(value || '').replace(/[&<>"']/g, m => map[m]);
+        }
+
+        function formatDate(isoString) {
+            if (!isoString) return '-';
+            const d = new Date(isoString);
+            return d.toLocaleString('ru-RU');
+        }
+    </script>
+</body>
+</html>
