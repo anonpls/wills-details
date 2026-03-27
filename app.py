@@ -53,6 +53,48 @@ def init_db():
             FOREIGN KEY (user_id) REFERENCES users(id)
         )
     """)
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS forum_sections (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            slug TEXT NOT NULL UNIQUE,
+            title TEXT NOT NULL,
+            description TEXT,
+            created_at TEXT NOT NULL
+        )
+    """)
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS forum_topics (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            section_id INTEGER NOT NULL,
+            user_id INTEGER NOT NULL,
+            title TEXT NOT NULL,
+            created_at TEXT NOT NULL,
+            FOREIGN KEY (section_id) REFERENCES forum_sections(id),
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+    """)
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS forum_posts (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            topic_id INTEGER NOT NULL,
+            user_id INTEGER NOT NULL,
+            body TEXT NOT NULL,
+            created_at TEXT NOT NULL,
+            FOREIGN KEY (topic_id) REFERENCES forum_topics(id),
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+    """)
+    sections_count = cursor.execute('SELECT COUNT(*) as total FROM forum_sections').fetchone()['total']
+    if sections_count == 0:
+        now = datetime.utcnow().isoformat()
+        cursor.executemany(
+            'INSERT INTO forum_sections (slug, title, description, created_at) VALUES (?, ?, ?, ?)',
+            [
+                ('models', 'Обсуждение моделей', 'Обсуждаем марки, кузова, поколения и опыт владения.', now),
+                ('tuning', 'Тюнинг и детейлинг', 'Идеи, кейсы, материалы, советы по работам.', now),
+                ('market', 'Покупка и продажа', 'Вопросы по подбору, покупке и продаже авто/запчастей.', now)
+            ]
+        )
     conn.commit()
     conn.close()
 
@@ -79,6 +121,10 @@ def get_user_transactions(user_id, limit=10):
     ).fetchall()
     conn.close()
     return rows
+
+
+def serialize_forum_row(row):
+    return dict(row) if row else None
 
 
 def add_points(user_id, amount, description):
@@ -440,9 +486,165 @@ def shop():
 def comments():
     return render_template('comments.html')
 
+@application.route('/forum')
+def forum():
+    return render_template('forum.html')
+
 @application.route('/configurator')
 def configurator():
     return render_template('configurator.html')
+
+
+@application.route('/api/forum/sections')
+def forum_sections():
+    conn = get_db_connection()
+    rows = conn.execute(
+        """
+        SELECT s.id, s.slug, s.title, s.description, s.created_at,
+               COUNT(DISTINCT t.id) as topics_count,
+               COUNT(p.id) as posts_count
+        FROM forum_sections s
+        LEFT JOIN forum_topics t ON t.section_id = s.id
+        LEFT JOIN forum_posts p ON p.topic_id = t.id
+        GROUP BY s.id
+        ORDER BY s.id ASC
+        """
+    ).fetchall()
+    conn.close()
+    return jsonify({'sections': [serialize_forum_row(row) for row in rows]})
+
+
+@application.route('/api/forum/topics')
+def forum_topics():
+    section_id = request.args.get('section_id', type=int)
+    if not section_id:
+        return jsonify({'status': 'error', 'message': 'section_id обязателен'}), 400
+
+    conn = get_db_connection()
+    rows = conn.execute(
+        """
+        SELECT t.id, t.section_id, t.title, t.created_at,
+               u.id as user_id, u.name as user_name,
+               COUNT(p.id) as posts_count,
+               MAX(p.created_at) as last_post_at
+        FROM forum_topics t
+        JOIN users u ON u.id = t.user_id
+        LEFT JOIN forum_posts p ON p.topic_id = t.id
+        WHERE t.section_id = ?
+        GROUP BY t.id
+        ORDER BY COALESCE(last_post_at, t.created_at) DESC
+        """,
+        (section_id,)
+    ).fetchall()
+    conn.close()
+    return jsonify({'topics': [serialize_forum_row(row) for row in rows]})
+
+
+@application.route('/api/forum/topics', methods=['POST'])
+def forum_create_topic():
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'status': 'error', 'message': 'Авторизуйтесь, чтобы создать тему'}), 401
+
+    data = request.json or {}
+    section_id = data.get('section_id')
+    title = (data.get('title') or '').strip()
+    body = (data.get('body') or '').strip()
+
+    if not section_id or not title or not body:
+        return jsonify({'status': 'error', 'message': 'Заполните раздел, заголовок и текст'}), 400
+    if len(title) > 140:
+        return jsonify({'status': 'error', 'message': 'Заголовок слишком длинный (до 140 символов)'}), 400
+    if len(body) > 5000:
+        return jsonify({'status': 'error', 'message': 'Сообщение слишком длинное (до 5000 символов)'}), 400
+
+    conn = get_db_connection()
+    section = conn.execute('SELECT id FROM forum_sections WHERE id = ?', (section_id,)).fetchone()
+    if not section:
+        conn.close()
+        return jsonify({'status': 'error', 'message': 'Раздел не найден'}), 404
+
+    now = datetime.utcnow().isoformat()
+    cursor = conn.cursor()
+    cursor.execute(
+        'INSERT INTO forum_topics (section_id, user_id, title, created_at) VALUES (?, ?, ?, ?)',
+        (section_id, user_id, title, now)
+    )
+    topic_id = cursor.lastrowid
+    cursor.execute(
+        'INSERT INTO forum_posts (topic_id, user_id, body, created_at) VALUES (?, ?, ?, ?)',
+        (topic_id, user_id, body, now)
+    )
+    conn.commit()
+    conn.close()
+    return jsonify({'status': 'success', 'topic_id': topic_id})
+
+
+@application.route('/api/forum/posts')
+def forum_posts():
+    topic_id = request.args.get('topic_id', type=int)
+    if not topic_id:
+        return jsonify({'status': 'error', 'message': 'topic_id обязателен'}), 400
+
+    conn = get_db_connection()
+    topic = conn.execute(
+        """
+        SELECT t.id, t.section_id, t.title, t.created_at, u.id as user_id, u.name as user_name
+        FROM forum_topics t
+        JOIN users u ON u.id = t.user_id
+        WHERE t.id = ?
+        """,
+        (topic_id,)
+    ).fetchone()
+    if not topic:
+        conn.close()
+        return jsonify({'status': 'error', 'message': 'Тема не найдена'}), 404
+
+    posts = conn.execute(
+        """
+        SELECT p.id, p.topic_id, p.body, p.created_at, u.id as user_id, u.name as user_name
+        FROM forum_posts p
+        JOIN users u ON u.id = p.user_id
+        WHERE p.topic_id = ?
+        ORDER BY p.id ASC
+        """,
+        (topic_id,)
+    ).fetchall()
+    conn.close()
+    return jsonify({
+        'topic': serialize_forum_row(topic),
+        'posts': [serialize_forum_row(row) for row in posts]
+    })
+
+
+@application.route('/api/forum/posts', methods=['POST'])
+def forum_create_post():
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'status': 'error', 'message': 'Авторизуйтесь, чтобы ответить'}), 401
+
+    data = request.json or {}
+    topic_id = data.get('topic_id')
+    body = (data.get('body') or '').strip()
+    if not topic_id or not body:
+        return jsonify({'status': 'error', 'message': 'Укажите тему и текст сообщения'}), 400
+    if len(body) > 5000:
+        return jsonify({'status': 'error', 'message': 'Сообщение слишком длинное (до 5000 символов)'}), 400
+
+    conn = get_db_connection()
+    topic = conn.execute('SELECT id FROM forum_topics WHERE id = ?', (topic_id,)).fetchone()
+    if not topic:
+        conn.close()
+        return jsonify({'status': 'error', 'message': 'Тема не найдена'}), 404
+
+    now = datetime.utcnow().isoformat()
+    conn.execute(
+        'INSERT INTO forum_posts (topic_id, user_id, body, created_at) VALUES (?, ?, ?, ?)',
+        (topic_id, user_id, body, now)
+    )
+    conn.commit()
+    conn.close()
+    return jsonify({'status': 'success'})
 
 @application.route('/img/<path:filename>')
 def image_file(filename):
