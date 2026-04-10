@@ -46,9 +46,16 @@
         </div>
 
         <div id="configResult" style="display:none; grid-template-columns:1fr 1fr; gap:40px; margin-top:60px;">
-            <div><img id="resImg" src="" style="width:100%; border-radius:16px;"></div>
+            <div>
+                <img id="resImg" src="" style="width:100%; border-radius:16px;">
+                <div id="resSummaryCard" class="config-summary-card" style="display:none;">
+                    <div class="config-summary-label">AI Summary</div>
+                    <p id="resSummaryText" class="config-summary-text"></p>
+                </div>
+            </div>
             <div>
                 <h3 id="resTitle" style="font-size:30px; margin-bottom:10px;">MODEL</h3>
+                <p id="resSpecs" style="color:var(--text-muted); margin-bottom:22px;"></p>
                 <div id="resParts" class="grid-3" style="grid-template-columns:1fr;"></div>
             </div>
         </div>
