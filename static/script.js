@@ -59,6 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
     updateCartUI();
     renderGrids();
     renderHomeCatalog();
+    initSmartSelection();
     initCheckoutPanel();
     initLegalModals(); // Инициализация правовых документов
 });
@@ -470,6 +471,20 @@ function initDatalist() {
             dl.appendChild(opt);
         });
     }
+}
+
+function initSmartSelection() {
+    const searchBtn = document.getElementById('searchBtn');
+    const carInput = document.getElementById('carInput');
+    if (!searchBtn || !carInput) return;
+
+    searchBtn.addEventListener('click', searchCar);
+    carInput.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            searchCar();
+        }
+    });
 }
 
 const WIKIDATA_CACHE_KEY = 'williCarImageCacheV1';
