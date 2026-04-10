@@ -598,6 +598,31 @@ function renderConfiguratorParts(parts) {
     });
 }
 
+async function fetchModelSummary(modelName, specs = '') {
+    const summaryCard = document.getElementById('resSummaryCard');
+    const summaryText = document.getElementById('resSummaryText');
+    if (!summaryCard || !summaryText) return;
+
+    summaryCard.style.display = 'block';
+    summaryText.textContent = 'Генерируем краткий AI summary...';
+
+    try {
+        const response = await fetch('/api/car-summary', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ model: modelName, specs })
+        });
+        const data = await response.json();
+        if (!response.ok || data.status !== 'success') {
+            throw new Error(data.message || 'Не удалось получить summary');
+        }
+        summaryText.textContent = data.summary;
+    } catch (error) {
+        console.error(error);
+        summaryText.textContent = 'Не удалось получить AI summary прямо сейчас. Попробуйте ещё раз через несколько секунд.';
+    }
+}
+
 async function searchCar() {
     const rawInput = document.getElementById('carInput').value.trim();
     const input = rawInput.toLowerCase();
@@ -621,6 +646,7 @@ async function searchCar() {
             title.textContent = key.toUpperCase();
             specs.textContent = car.specs;
             renderConfiguratorParts(parts);
+            await fetchModelSummary(title.textContent, car.specs);
             showToast('Комплектующие найдены', 'success', 'fa-check-double');
             return;
         }
@@ -631,6 +657,7 @@ async function searchCar() {
             title.textContent = wikiResult.title.toUpperCase();
             specs.textContent = wikiResult.specs;
             renderConfiguratorParts(parts);
+            await fetchModelSummary(wikiResult.title, wikiResult.specs);
             showToast('Комплектующие найдены', 'success', 'fa-check-double');
             return;
         }
@@ -639,6 +666,7 @@ async function searchCar() {
         title.textContent = rawInput.toUpperCase();
         specs.textContent = 'Не нашли изображение. Попробуйте указать марку и кузов (например: BMW X5 G05)';
         parts.innerHTML = '';
+        await fetchModelSummary(rawInput);
         showToast('Не удалось найти изображение модели', 'error');
     } catch (e) {
         console.error(e);

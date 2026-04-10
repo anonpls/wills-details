@@ -15,6 +15,7 @@ YANDEX_API_KEY = os.getenv('YANDEX_API_KEY')
 BOT_TOKEN = os.getenv('BOT_TOKEN')
 CHAT_ID = os.getenv('CHAT_ID')
 THREAD_ID = os.getenv('THREAD_ID')
+OPENROUTER_API_KEY = os.getenv('OPENROUTER_API_KEY')
 Configuration.configure(os.getenv('SHOP_ID'), os.getenv('YOOKASSA_SECRET_KEY'))
 
 application = Flask(__name__)
@@ -645,6 +646,68 @@ def forum_create_post():
     conn.commit()
     conn.close()
     return jsonify({'status': 'success'})
+
+
+@application.route('/api/car-summary', methods=['POST'])
+def car_summary():
+    data = request.json or {}
+    model = (data.get('model') or '').strip()
+    specs = (data.get('specs') or '').strip()
+
+    if not model:
+        return jsonify({'status': 'error', 'message': 'model обязателен'}), 400
+    if not OPENROUTER_API_KEY:
+        return jsonify({'status': 'error', 'message': 'OPENROUTER_API_KEY не настроен на сервере'}), 500
+
+    prompt = (
+        "Сделай стильный краткий summary (2-3 предложения, до 60 слов) на русском языке "
+        "для страницы автоателье. Тон: премиальный, информативный, без воды. "
+        "Упомяни характер модели, комфорт/динамику и потенциал для тюнинга/детейлинга. "
+        f"Модель: {model}. Характеристики/контекст: {specs or 'нет данных'}."
+    )
+
+    try:
+        response = requests.post(
+            'https://openrouter.ai/api/v1/chat/completions',
+            headers={
+                'Authorization': f'Bearer {OPENROUTER_API_KEY}',
+                'Content-Type': 'application/json',
+                'HTTP-Referer': request.host_url.rstrip('/'),
+                'X-Title': 'WILLI MEDIA Smart Selection'
+            },
+            json={
+                'model': 'openai/gpt-oss-120b:free',
+                'messages': [
+                    {
+                        'role': 'system',
+                        'content': 'Ты automotive-эксперт и пишешь очень ёмко, красиво и по делу.'
+                    },
+                    {'role': 'user', 'content': prompt}
+                ],
+                'temperature': 0.7,
+                'max_tokens': 180
+            },
+            timeout=25
+        )
+        payload = response.json()
+        if response.status_code >= 400:
+            message = payload.get('error', {}).get('message') or 'Ошибка OpenRouter'
+            return jsonify({'status': 'error', 'message': message}), 502
+
+        summary = (
+            payload.get('choices', [{}])[0]
+            .get('message', {})
+            .get('content', '')
+            .strip()
+        )
+        if not summary:
+            return jsonify({'status': 'error', 'message': 'Пустой ответ от модели'}), 502
+
+        return jsonify({'status': 'success', 'summary': summary})
+    except requests.RequestException as error:
+        return jsonify({'status': 'error', 'message': f'Сеть OpenRouter недоступна: {error}'}), 502
+    except ValueError:
+        return jsonify({'status': 'error', 'message': 'Некорректный ответ OpenRouter'}), 502
 
 @application.route('/img/<path:filename>')
 def image_file(filename):

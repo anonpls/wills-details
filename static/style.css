@@ -370,6 +370,28 @@ header.header-hidden { transform: translateY(-100%); }
     font-family: var(--font-body); background: transparent; color: var(--text-main); min-width: 200px; 
 }
 .config-result { display: none; grid-template-columns: 1fr 1fr; gap: 50px; margin-top: 40px; align-items: start; }
+.config-summary-card {
+    margin-top: 18px;
+    padding: 16px 18px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    background: linear-gradient(135deg, color-mix(in srgb, var(--bg-card) 88%, #ffffff 12%) 0%, var(--bg-card) 100%);
+    box-shadow: var(--card-shadow);
+}
+.config-summary-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: var(--accent);
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+.config-summary-text {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text-main);
+}
 
 /* Сканирующий эффект конфигуратора */
 .scan-overlay {
