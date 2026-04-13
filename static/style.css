@@ -672,6 +672,26 @@ body, p, .nav-link, .product-desc, .toast {
     opacity: 0.8;
 }
 
+/* =========================================
+   ADD PRODUCT CARD (для администраторов)
+   ========================================= */
+.add-product-card {
+    border: 2px dashed var(--border-color) !important;
+    background: var(--bg-card) !important;
+    min-height: 480px;
+    position: relative;
+    transition: all var(--transition-fast);
+}
+
+.add-product-card:hover {
+    background: rgba(211, 47, 47, 0.02) !important;
+    border-color: var(--accent) !important;
+}
+
+[data-theme="dark"] .add-product-card:hover {
+    background: rgba(211, 47, 47, 0.05) !important;
+}
+
 /* 4. ИДЕАЛЬНЫЙ КУРСОР (Больше не пропадает) */
 @media (pointer: fine) {
     a, button, input, textarea, .nav-link, .product-card, .logo {}

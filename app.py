@@ -3,11 +3,14 @@ import requests
 import dotenv
 import os
 import sqlite3
+import json
 from datetime import datetime
 from yookassa import Configuration, Payment
 import uuid
 import re
 from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.utils import secure_filename
+import mimetypes
 
 dotenv.load_dotenv()
 
@@ -21,6 +24,15 @@ Configuration.configure(os.getenv('SHOP_ID'), os.getenv('YOOKASSA_SECRET_KEY'))
 application = Flask(__name__)
 application.secret_key = os.getenv('FLASK_SECRET_KEY', 'dev-secret-key-change-me')
 
+# Конфиг для загрузки файлов
+UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'img', 'uploads')
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB
+
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+application.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+application.config['MAX_CONTENT_LENGTH'] = MAX_FILE_SIZE
+
 DB_PATH = os.path.join(os.path.dirname(__file__), 'cabinet.sqlite3')
 
 
@@ -28,6 +40,10 @@ def get_db_connection():
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     return conn
+
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
 def init_db():
@@ -41,6 +57,7 @@ def init_db():
             email TEXT,
             password_hash TEXT NOT NULL,
             points INTEGER NOT NULL DEFAULT 0,
+            is_admin INTEGER NOT NULL DEFAULT 0,
             created_at TEXT NOT NULL
         )
     """)
@@ -52,6 +69,20 @@ def init_db():
             description TEXT NOT NULL,
             created_at TEXT NOT NULL,
             FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+    """)
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS products (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            category TEXT NOT NULL,
+            price INTEGER NOT NULL,
+            description TEXT NOT NULL,
+            image_url TEXT,
+            badges TEXT,
+            created_at TEXT NOT NULL,
+            created_by INTEGER NOT NULL,
+            FOREIGN KEY (created_by) REFERENCES users(id)
         )
     """)
     cursor.execute("""
@@ -96,13 +127,33 @@ def init_db():
                 ('market', 'Покупка и продажа', 'Вопросы по подбору, покупке и продаже авто/запчастей.', now)
             ]
         )
+    
+    # Инициализация товаров по умолчанию
+    products_count = cursor.execute('SELECT COUNT(*) as total FROM products').fetchone()['total']
+    if products_count == 0:
+        now = datetime.utcnow().isoformat()
+        # Создаем системного пользователя для товаров (ID = 1)
+        # или используем существующего администратора
+        default_user_id = 1
+        cursor.executemany(
+            'INSERT INTO products (name, category, price, description, image_url, badges, created_at, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+            [
+                ('Legenda 4', 'ВИБРОИЗОЛЯЦИЯ', 650, 'Премиальная виброизоляция. Эффективно убирает гул металла и структурные вибрации.', '/img/part_1.png', json.dumps(['Убирает гул', 'Толщина 4мм']), now, default_user_id),
+                ('Relief', 'ЗВУКОПОГЛОТИТЕЛЬ', 850, 'Звукопоглощающий материал. Отлично поглощает шум и убирает эффект эха в дверях.', '/img/part_2.png', json.dumps(['Поглощает шум', 'Анти-эхо']), now, default_user_id),
+                ('Legenda 1.5', 'АНТИСКРИП', 450, 'Тонкий материал для обработки дверных карт. Полностью убирает скрипы пластиковой обшивки.', '/img/part_3.png', json.dumps(['Убирает скрип', 'Для обшивки']), now, default_user_id),
+                ('Legenda 2', 'ИЗОЛЯЦИЯ', 550, 'Материал для закрытия технологических отверстий. Создает герметичный короб для идеального звучания динамика.', '/img/part_4.png', json.dumps(['Герметичность', 'Для автозвука']), now, default_user_id),
+                ('Обезжириватель (Спирт)', 'РАСХОДНИКИ', 350, 'Профессиональный изопропиловый спирт для подготовки поверхностей перед оклейкой и шумоизоляцией.', '/img/part_5.png', json.dumps(['Очистка 99%', 'Без разводов']), now, default_user_id),
+                ('Набор VAG/BMW клипс', 'КРЕПЕЖ', 1200, 'Профессиональный набор крепежных клипс для дверных карт и обшивки. Незаменимо при разборке салона.', '/img/part_6.png', json.dumps(['OEM Качество', '50 штук']), now, default_user_id)
+            ]
+        )
+    
     conn.commit()
     conn.close()
 
 
 def get_user_by_id(user_id):
     conn = get_db_connection()
-    user = conn.execute('SELECT id, name, phone, email, points, created_at FROM users WHERE id = ?', (user_id,)).fetchone()
+    user = conn.execute('SELECT id, name, phone, email, points, is_admin, created_at FROM users WHERE id = ?', (user_id,)).fetchone()
     conn.close()
     return user
 
@@ -148,7 +199,37 @@ def serialize_user(user):
         'phone': user['phone'],
         'email': user['email'] or '',
         'points': user['points'],
+        'is_admin': user['is_admin'] or 0,
         'created_at': user['created_at']
+    }
+
+
+def get_all_products():
+    conn = get_db_connection()
+    rows = conn.execute(
+        'SELECT id, name, category, price, description, image_url, badges, created_at FROM products ORDER BY id DESC'
+    ).fetchall()
+    conn.close()
+    return rows
+
+
+def serialize_product(product):
+    if not product:
+        return None
+    badges = []
+    if product['badges']:
+        try:
+            badges = json.loads(product['badges'])
+        except:
+            badges = []
+    return {
+        'id': product['id'],
+        'name': product['name'],
+        'cat': product['category'],
+        'price': product['price'],
+        'desc': product['description'],
+        'img': product['image_url'],
+        'badges': badges
     }
 
 
@@ -375,6 +456,100 @@ def cabinet_me():
 
     transactions = [dict(row) for row in get_user_transactions(user['id'])]
     return jsonify({'authenticated': True, 'user': serialize_user(user), 'transactions': transactions})
+
+
+@application.route('/api/upload-image', methods=['POST'])
+def upload_image():
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'status': 'error', 'message': 'Авторизуйтесь, чтобы загрузить изображение'}), 401
+    
+    user = get_user_by_id(user_id)
+    if not user or not user['is_admin']:
+        return jsonify({'status': 'error', 'message': 'Только администраторы могут загружать изображения'}), 403
+
+    if 'image' not in request.files:
+        return jsonify({'status': 'error', 'message': 'Файл не найден'}), 400
+
+    file = request.files['image']
+    
+    if file.filename == '':
+        return jsonify({'status': 'error', 'message': 'Файл не выбран'}), 400
+
+    if not allowed_file(file.filename):
+        return jsonify({'status': 'error', 'message': 'Недопустимый формат файла. Используйте PNG, JPG, JPEG, GIF или WebP'}), 400
+
+    try:
+        # Генерируем уникальное имя файла
+        filename = f"product_{uuid.uuid4().hex}_{secure_filename(file.filename)}"
+        filepath = os.path.join(application.config['UPLOAD_FOLDER'], filename)
+        
+        # Сохраняем файл
+        file.save(filepath)
+        
+        # Возвращаем URL для доступа
+        image_url = f'/img/uploads/{filename}'
+        return jsonify({'status': 'success', 'image_url': image_url})
+    
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': f'Ошибка при загрузке файла: {str(e)}'}), 500
+
+
+@application.route('/api/products', methods=['GET'])
+def get_products():
+    products = get_all_products()
+    return jsonify({'products': [serialize_product(p) for p in products]})
+
+
+@application.route('/api/products', methods=['POST'])
+def create_product():
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'status': 'error', 'message': 'Авторизуйтесь, чтобы добавить товар'}), 401
+    
+    user = get_user_by_id(user_id)
+    if not user or not user['is_admin']:
+        return jsonify({'status': 'error', 'message': 'Только администраторы могут добавлять товары'}), 403
+
+    data = request.json or {}
+    name = (data.get('name') or '').strip()
+    category = (data.get('category') or '').strip()
+    price_str = str(data.get('price') or '0').strip()
+    description = (data.get('description') or '').strip()
+    image_url = (data.get('image_url') or '').strip()
+    badges = data.get('badges') or []
+
+    if not name or not category or not price_str or not description:
+        return jsonify({'status': 'error', 'message': 'Заполните все обязательные поля'}), 400
+
+    try:
+        price = int(float(price_str))
+    except ValueError:
+        return jsonify({'status': 'error', 'message': 'Некорректная цена'}), 400
+
+    if len(name) > 200:
+        return jsonify({'status': 'error', 'message': 'Название слишком длинное (макс 200 символов)'}), 400
+    if len(description) > 1000:
+        return jsonify({'status': 'error', 'message': 'Описание слишком длинное (макс 1000 символов)'}), 400
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute(
+            'INSERT INTO products (name, category, price, description, image_url, badges, created_at, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+            (name, category, price, description, image_url, json.dumps(badges), datetime.utcnow().isoformat(), user_id)
+        )
+        product_id = cursor.lastrowid
+        conn.commit()
+    except Exception as e:
+        conn.close()
+        return jsonify({'status': 'error', 'message': f'Ошибка при добавлении: {str(e)}'}), 500
+    
+    conn.close()
+    return jsonify({'status': 'success', 'product_id': product_id})
+
+
+
 
 
 @application.route('/api/cabinet/register', methods=['POST'])

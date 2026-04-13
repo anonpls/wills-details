@@ -16,7 +16,7 @@ const servicesDB = [
 ];
 
 /* --- БАЗА ДАННЫХ: ТОВАРЫ (Шумка, спирт, клипсы) --- */
-const productsDB = [
+let productsDB = [
     { id: 101, name: "Legenda 4", cat: "ВИБРОИЗОЛЯЦИЯ", price: 650, img: "/img/part_1.png", desc: "Премиальная виброизоляция. Эффективно убирает гул металла и структурные вибрации.", badges: ["Убирает гул", "Толщина 4мм"] },
     { id: 102, name: "Relief", cat: "ЗВУКОПОГЛОТИТЕЛЬ", price: 850, img: "/img/part_2.png", desc: "Звукопоглощающий материал. Отлично поглощает шум и убирает эффект эха в дверях.", badges: ["Поглощает шум", "Анти-эхо"] },
     { id: 103, name: "Legenda 1.5", cat: "АНТИСКРИП", price: 450, img: "/img/part_3.png", desc: "Тонкий материал для обработки дверных карт. Полностью убирает скрипы пластиковой обшивки.", badges: ["Убирает скрип", "Для обшивки"] },
@@ -47,18 +47,20 @@ const pickupProviders = {
 };
 
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     initTheme();
     initSmartHeader();
     initScrollReveal();
     initDatalist();
-    initUserCabinet();
+    await initUserCabinet();  // Ждем загрузки данных пользователя
     setActiveMenuLink(); 
     checkDailyBonus();   
     updatePointsUI();
     updateCartUI();
-    renderGrids();
+    await loadProductsFromServer();  // Ждем загрузки товаров
+    renderGrids();  // Теперь currentUser инициализирован
     renderHomeCatalog();
+    initSmartSelection();
     initSmartSelection();
     initCheckoutPanel();
     initLegalModals(); // Инициализация правовых документов
@@ -212,6 +214,17 @@ function renderGrids() {
                     </div>
                 </div>`;
         });
+        
+        // Добавляем кнопку добавления товара для администраторов
+        if (currentUser && currentUser.is_admin) {
+            catGrid.innerHTML += `
+                <div class="product-card add-product-card" onclick="openAddProductModal()" style="cursor: pointer; display: flex; align-items: center; justify-content: center;">
+                    <div style="text-align: center;">
+                        <i class="fa-solid fa-plus" style="font-size: 48px; color: #ccc; margin-bottom: 12px; display: block;"></i>
+                        <p style="color: #999; font-size: 14px; margin: 0;">Добавить товар</p>
+                    </div>
+                </div>`;
+        }
     }
 }
 
@@ -470,6 +483,152 @@ function initDatalist() {
             opt.value = b;
             dl.appendChild(opt);
         });
+    }
+}
+
+async function loadProductsFromServer() {
+    try {
+        const response = await fetch('/api/products');
+        if (response.ok) {
+            const data = await response.json();
+            if (data.products && data.products.length > 0) {
+                productsDB = data.products;
+            }
+        }
+    } catch (error) {
+        console.log('Ошибка при загрузке товаров:', error);
+    }
+}
+
+function openAddProductModal() {
+    if (!currentUser || !currentUser.is_admin) {
+        showToast('У вас нет прав администратора', 'error', 'fa-lock');
+        return;
+    }
+    
+    const modal = document.getElementById('addProductModal');
+    if (modal) {
+        modal.classList.add('active');
+        const form = document.getElementById('addProductForm');
+        if (form) {
+            form.reset();
+        }
+        // Скрыть превью при открытии
+        const preview = document.getElementById('productImagePreview');
+        if (preview) {
+            preview.style.display = 'none';
+        }
+        // Добавить слушатель для превью
+        const imageInput = document.getElementById('productImage');
+        if (imageInput) {
+            imageInput.addEventListener('change', handleImagePreview);
+        }
+    }
+}
+
+function handleImagePreview(event) {
+    const file = event.target.files[0];
+    const preview = document.getElementById('productImagePreview');
+    
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            preview.src = e.target.result;
+            preview.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+    } else {
+        preview.style.display = 'none';
+    }
+}
+
+function closeAddProductModal() {
+    const modal = document.getElementById('addProductModal');
+    if (modal) {
+        modal.classList.remove('active');
+    }
+}
+
+async function submitAddProduct() {
+    if (!currentUser || !currentUser.is_admin) {
+        showToast('У вас нет прав администратора', 'error', 'fa-lock');
+        return;
+    }
+
+    const form = document.getElementById('addProductForm');
+    if (!form) return;
+
+    const name = (document.getElementById('productName').value || '').trim();
+    const category = (document.getElementById('productCategory').value || '').trim();
+    const priceStr = (document.getElementById('productPrice').value || '').trim();
+    const description = (document.getElementById('productDescription').value || '').trim();
+    const imageInput = document.getElementById('productImage');
+    const badgesInput = (document.getElementById('productBadges').value || '').trim();
+    
+    if (!name || !category || !priceStr || !description) {
+        showToast('Заполните все обязательные поля', 'error', 'fa-exclamation');
+        return;
+    }
+
+    const price = parseInt(priceStr);
+    if (isNaN(price) || price <= 0) {
+        showToast('Цена должна быть положительным числом', 'error', 'fa-exclamation');
+        return;
+    }
+
+    let image_url = '';
+
+    try {
+        // Если выбран файл, загружаем его
+        if (imageInput && imageInput.files && imageInput.files[0]) {
+            const formData = new FormData();
+            formData.append('image', imageInput.files[0]);
+            
+            const uploadResponse = await fetch('/api/upload-image', {
+                method: 'POST',
+                body: formData
+            });
+
+            const uploadData = await uploadResponse.json();
+            
+            if (!uploadResponse.ok) {
+                showToast(uploadData.message || 'Ошибка при загрузке изображения', 'error', 'fa-exclamation');
+                return;
+            }
+            
+            image_url = uploadData.image_url || '';
+        }
+
+        const badges = badgesInput.split(',').map(b => b.trim()).filter(b => b.length > 0);
+
+        const response = await fetch('/api/products', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                name,
+                category,
+                price,
+                description,
+                image_url,
+                badges
+            })
+        });
+
+        const data = await response.json();
+        
+        if (response.ok && data.status === 'success') {
+            showToast('Товар успешно добавлен!', 'success', 'fa-check');
+            closeAddProductModal();
+            await loadProductsFromServer();
+            renderGrids();
+            renderHomeCatalog();
+        } else {
+            showToast(data.message || 'Ошибка при добавлении товара', 'error', 'fa-exclamation');
+        }
+    } catch (error) {
+        showToast('Ошибка сервера: ' + error.message, 'error', 'fa-exclamation');
     }
 }
 

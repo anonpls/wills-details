@@ -79,6 +79,59 @@
     </div>
     <div id="detailModal" class="modal-overlay" onclick="if(event.target === this) closeDetailModal()"><div class="modal-content"><button class="modal-close" onclick="closeDetailModal()">&times;</button><div class="modal-img-col"><img id="dmImg" src=""></div><div class="modal-info-col"><h2 id="dmTitle"></h2><h3 id="dmPrice"></h3><p id="dmDesc"></p><button id="dmBtn" class="btn btn-primary">ACTION</button></div></div></div>
     
+    <!-- Add Product Modal (для администраторов) -->
+    <div id="addProductModal" class="modal-overlay" onclick="if(event.target === this) closeAddProductModal()">
+        <div class="modal-content" style="max-width: 600px; max-height: 90vh; overflow-y: auto; padding: 40px; display: block !important;">
+            <button class="modal-close" onclick="closeAddProductModal()">&times;</button>
+            <h2 style="margin-top: 0; margin-bottom: 24px;">Добавить товар в каталог</h2>
+            
+            <form id="addProductForm" onsubmit="event.preventDefault(); submitAddProduct();">
+                <div style="margin-bottom: 16px;">
+                    <label for="productName" style="display: block; margin-bottom: 6px; font-weight: 600; font-size: 13px; color: #666;">Название товара *</label>
+                    <input type="text" id="productName" placeholder="Например: Legenda 4" maxlength="200" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; box-sizing: border-box;" required>
+                </div>
+                
+                <div style="margin-bottom: 16px;">
+                    <label for="productCategory" style="display: block; margin-bottom: 6px; font-weight: 600; font-size: 13px; color: #666;">Категория *</label>
+                    <input type="text" id="productCategory" placeholder="Например: ВИБРОИЗОЛЯЦИЯ" maxlength="100" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; box-sizing: border-box;" required>
+                </div>
+                
+                <div style="margin-bottom: 16px;">
+                    <label for="productPrice" style="display: block; margin-bottom: 6px; font-weight: 600; font-size: 13px; color: #666;">Цена (руб.) *</label>
+                    <input type="number" id="productPrice" placeholder="650" min="0" step="1" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; box-sizing: border-box;" required>
+                </div>
+                
+                <div style="margin-bottom: 16px;">
+                    <label for="productDescription" style="display: block; margin-bottom: 6px; font-weight: 600; font-size: 13px; color: #666;">Описание *</label>
+                    <textarea id="productDescription" placeholder="Премиальная виброизоляция. Эффективно убирает гул..." maxlength="1000" rows="4" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; box-sizing: border-box; font-family: inherit; resize: none;" required></textarea>
+                </div>
+                
+                <div style="margin-bottom: 16px;">
+                    <label for="productImage" style="display: block; margin-bottom: 6px; font-weight: 600; font-size: 13px; color: #666;">Изображение товара</label>
+                    <div style="display: flex; gap: 12px; align-items: flex-start;">
+                        <div style="flex: 1;">
+                            <input type="file" id="productImage" accept="image/*" style="display: none;">
+                            <button type="button" onclick="document.getElementById('productImage').click()" class="btn btn-ghost" style="width: 100%; border: 2px dashed #ddd; padding: 20px; text-align: center; color: #666; font-size: 14px;">
+                                <i class="fa-solid fa-cloud-arrow-up" style="display: block; font-size: 24px; margin-bottom: 8px; color: #999;"></i>
+                                Выберите изображение
+                            </button>
+                        </div>
+                        <img id="productImagePreview" style="width: 80px; height: 80px; border-radius: 6px; object-fit: cover; border: 1px solid #ddd; display: none;">
+                    </div>
+                </div>
+                
+                <div style="margin-bottom: 20px;">
+                    <label for="productBadges" style="display: block; margin-bottom: 6px; font-weight: 600; font-size: 13px; color: #666;">Бейджи (через запятую)</label>
+                    <input type="text" id="productBadges" placeholder="Убирает гул, Толщина 4мм" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; box-sizing: border-box;">
+                </div>
+                
+                <div style="display: flex; gap: 12px;">
+                    <button type="submit" class="btn btn-primary" style="flex: 1;">Добавить товар</button>
+                    <button type="button" onclick="closeAddProductModal()" class="btn btn-ghost" style="flex: 1; border: 1px solid #ddd; color: #666;">Отмена</button>
+                </div>
+            </form>
+        </div>
+    </div>
 <footer>
         <div class="container">
             <div class="footer-grid">
