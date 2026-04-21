@@ -46,6 +46,15 @@ const pickupProviders = {
     cdek: { label: 'СДЭК', query: 'СДЭК пункт выдачи', accent: '#19A54A' }
 };
 
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
 
 document.addEventListener('DOMContentLoaded', async () => {
     initTheme();
@@ -198,19 +207,30 @@ function renderGrids() {
     if (catGrid) {
         catGrid.innerHTML = '';
         productsDB.forEach(p => {
+            const adminActions = (currentUser && currentUser.is_admin) ? `
+                <div style="display:flex; gap:8px; margin-top:10px;">
+                    <button class="btn btn-ghost" style="flex:1; border:1px solid #ddd; font-size:12px; padding:8px;" onclick="openEditProductModal(${p.id}); event.stopPropagation();">
+                        <i class="fa-solid fa-pen"></i> Изменить
+                    </button>
+                    <button class="btn btn-ghost" style="flex:1; border:1px solid #f1c0c0; color:#b91c1c; font-size:12px; padding:8px;" onclick="deleteProduct(${p.id}); event.stopPropagation();">
+                        <i class="fa-solid fa-trash"></i> Удалить
+                    </button>
+                </div>
+            ` : '';
             catGrid.innerHTML += `
                 <div class="product-card">
                     <button class="wishlist-btn" onclick="showToast('Добавлено в избранное', 'success', 'fa-heart')"><i class="fa-regular fa-heart"></i></button>
                     <div class="product-image" onclick="openDetailModal('product', ${p.id})">
-                        <img src="${p.img}" alt="${p.name}" onerror="this.src='https://via.placeholder.com/400x400/f4f5f7/cccccc?text=ТОВАР'">
+                        <img src="${p.img}" alt="${escapeHtml(p.name)}" onerror="this.src='https://via.placeholder.com/400x400/f4f5f7/cccccc?text=ТОВАР'">
                     </div>
                     <div class="product-meta">
-                        <h3 class="product-title">${p.name}</h3>
-                        <p class="product-desc">${p.cat}</p>
+                        <h3 class="product-title">${escapeHtml(p.name)}</h3>
+                        <p class="product-desc">${escapeHtml(p.cat)}</p>
                         <div class="product-price" style="font-weight:600;">${p.price.toLocaleString()} ₽</div>
+                        ${adminActions}
                     </div>
                     <div class="product-action">
-                        <button class="add-cart-btn" onclick="addToCart('${p.name}', ${p.price})">В корзину</button>
+                        <button class="add-cart-btn" onclick="addToCart(${JSON.stringify(p.name)}, ${p.price})">В корзину</button>
                     </div>
                 </div>`;
         });
@@ -549,6 +569,79 @@ function closeAddProductModal() {
     }
 }
 
+function openEditProductModal(productId) {
+    if (!currentUser || !currentUser.is_admin) {
+        showToast('У вас нет прав администратора', 'error', 'fa-lock');
+        return;
+    }
+
+    const product = productsDB.find(p => p.id === productId);
+    if (!product) {
+        showToast('Товар не найден', 'error', 'fa-exclamation');
+        return;
+    }
+
+    document.getElementById('editProductId').value = product.id;
+    document.getElementById('editProductName').value = product.name || '';
+    document.getElementById('editProductCategory').value = product.cat || '';
+    document.getElementById('editProductPrice').value = product.price || 0;
+    document.getElementById('editProductDescription').value = product.desc || '';
+    document.getElementById('editProductBadges').value = Array.isArray(product.badges) ? product.badges.join(', ') : '';
+    document.getElementById('editProductCurrentImage').value = product.img || '';
+
+    const imageInput = document.getElementById('editProductImage');
+    if (imageInput) {
+        imageInput.value = '';
+        imageInput.removeEventListener('change', handleEditImagePreview);
+        imageInput.addEventListener('change', handleEditImagePreview);
+    }
+
+    const preview = document.getElementById('editProductImagePreview');
+    if (preview) {
+        if (product.img) {
+            preview.src = product.img;
+            preview.style.display = 'block';
+        } else {
+            preview.style.display = 'none';
+        }
+    }
+
+    const modal = document.getElementById('editProductModal');
+    if (modal) {
+        modal.classList.add('active');
+    }
+}
+
+function handleEditImagePreview(event) {
+    const file = event.target.files[0];
+    const preview = document.getElementById('editProductImagePreview');
+    if (!preview) return;
+
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            preview.src = e.target.result;
+            preview.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+    } else {
+        const currentImage = document.getElementById('editProductCurrentImage').value || '';
+        if (currentImage) {
+            preview.src = currentImage;
+            preview.style.display = 'block';
+        } else {
+            preview.style.display = 'none';
+        }
+    }
+}
+
+function closeEditProductModal() {
+    const modal = document.getElementById('editProductModal');
+    if (modal) {
+        modal.classList.remove('active');
+    }
+}
+
 async function submitAddProduct() {
     if (!currentUser || !currentUser.is_admin) {
         showToast('У вас нет прав администратора', 'error', 'fa-lock');
@@ -626,6 +719,116 @@ async function submitAddProduct() {
             renderHomeCatalog();
         } else {
             showToast(data.message || 'Ошибка при добавлении товара', 'error', 'fa-exclamation');
+        }
+    } catch (error) {
+        showToast('Ошибка сервера: ' + error.message, 'error', 'fa-exclamation');
+    }
+}
+
+async function submitEditProduct() {
+    if (!currentUser || !currentUser.is_admin) {
+        showToast('У вас нет прав администратора', 'error', 'fa-lock');
+        return;
+    }
+
+    const productId = parseInt(document.getElementById('editProductId').value, 10);
+    const name = (document.getElementById('editProductName').value || '').trim();
+    const category = (document.getElementById('editProductCategory').value || '').trim();
+    const priceStr = (document.getElementById('editProductPrice').value || '').trim();
+    const description = (document.getElementById('editProductDescription').value || '').trim();
+    const badgesInput = (document.getElementById('editProductBadges').value || '').trim();
+    const imageInput = document.getElementById('editProductImage');
+
+    if (!productId || !name || !category || !priceStr || !description) {
+        showToast('Заполните все обязательные поля', 'error', 'fa-exclamation');
+        return;
+    }
+
+    const price = parseInt(priceStr, 10);
+    if (isNaN(price) || price <= 0) {
+        showToast('Цена должна быть положительным числом', 'error', 'fa-exclamation');
+        return;
+    }
+
+    let image_url = document.getElementById('editProductCurrentImage').value || '';
+
+    try {
+        if (imageInput && imageInput.files && imageInput.files[0]) {
+            const formData = new FormData();
+            formData.append('image', imageInput.files[0]);
+            const uploadResponse = await fetch('/api/upload-image', {
+                method: 'POST',
+                body: formData
+            });
+            const uploadData = await uploadResponse.json();
+
+            if (!uploadResponse.ok) {
+                showToast(uploadData.message || 'Ошибка при загрузке изображения', 'error', 'fa-exclamation');
+                return;
+            }
+            image_url = uploadData.image_url || image_url;
+        }
+
+        const badges = badgesInput.split(',').map(b => b.trim()).filter(b => b.length > 0);
+
+        const response = await fetch(`/api/products/${productId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                name,
+                category,
+                price,
+                description,
+                image_url,
+                badges
+            })
+        });
+
+        const data = await response.json();
+        if (response.ok && data.status === 'success') {
+            showToast('Товар успешно обновлен!', 'success', 'fa-check');
+            closeEditProductModal();
+            await loadProductsFromServer();
+            renderGrids();
+            renderHomeCatalog();
+        } else {
+            showToast(data.message || 'Ошибка при редактировании товара', 'error', 'fa-exclamation');
+        }
+    } catch (error) {
+        showToast('Ошибка сервера: ' + error.message, 'error', 'fa-exclamation');
+    }
+}
+
+async function deleteProduct(productId) {
+    if (!currentUser || !currentUser.is_admin) {
+        showToast('У вас нет прав администратора', 'error', 'fa-lock');
+        return;
+    }
+
+    const product = productsDB.find(p => p.id === productId);
+    if (!product) {
+        showToast('Товар не найден', 'error', 'fa-exclamation');
+        return;
+    }
+
+    const confirmed = window.confirm(`Удалить товар "${product.name}"?`);
+    if (!confirmed) return;
+
+    try {
+        const response = await fetch(`/api/products/${productId}`, {
+            method: 'DELETE'
+        });
+        const data = await response.json();
+
+        if (response.ok && data.status === 'success') {
+            showToast('Товар удален', 'success', 'fa-check');
+            await loadProductsFromServer();
+            renderGrids();
+            renderHomeCatalog();
+        } else {
+            showToast(data.message || 'Ошибка при удалении товара', 'error', 'fa-exclamation');
         }
     } catch (error) {
         showToast('Ошибка сервера: ' + error.message, 'error', 'fa-exclamation');

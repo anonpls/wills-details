@@ -523,6 +523,83 @@ def create_product():
     return jsonify({'status': 'success', 'product_id': product_id})
 
 
+@application.route('/api/products/<int:product_id>', methods=['PUT'])
+def update_product(product_id):
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'status': 'error', 'message': 'Авторизуйтесь, чтобы редактировать товар'}), 401
+
+    user = get_user_by_id(user_id)
+    if not user or not user['is_admin']:
+        return jsonify({'status': 'error', 'message': 'Только администраторы могут редактировать товары'}), 403
+
+    data = request.json or {}
+    name = (data.get('name') or '').strip()
+    category = (data.get('category') or '').strip()
+    price_str = str(data.get('price') or '0').strip()
+    description = (data.get('description') or '').strip()
+    image_url = (data.get('image_url') or '').strip()
+    badges = data.get('badges') or []
+
+    if not name or not category or not price_str or not description:
+        return jsonify({'status': 'error', 'message': 'Заполните все обязательные поля'}), 400
+
+    try:
+        price = int(float(price_str))
+    except ValueError:
+        return jsonify({'status': 'error', 'message': 'Некорректная цена'}), 400
+
+    if len(name) > 200:
+        return jsonify({'status': 'error', 'message': 'Название слишком длинное (макс 200 символов)'}), 400
+    if len(description) > 1000:
+        return jsonify({'status': 'error', 'message': 'Описание слишком длинное (макс 1000 символов)'}), 400
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    product = cursor.execute('SELECT id FROM products WHERE id = ?', (product_id,)).fetchone()
+    if not product:
+        conn.close()
+        return jsonify({'status': 'error', 'message': 'Товар не найден'}), 404
+
+    try:
+        cursor.execute(
+            'UPDATE products SET name = ?, category = ?, price = ?, description = ?, image_url = ?, badges = ? WHERE id = ?',
+            (name, category, price, description, image_url, json.dumps(badges), product_id)
+        )
+        conn.commit()
+    except Exception as e:
+        conn.close()
+        return jsonify({'status': 'error', 'message': f'Ошибка при редактировании: {str(e)}'}), 500
+
+    conn.close()
+    return jsonify({'status': 'success'})
+
+
+@application.route('/api/products/<int:product_id>', methods=['DELETE'])
+def delete_product(product_id):
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'status': 'error', 'message': 'Авторизуйтесь, чтобы удалить товар'}), 401
+
+    user = get_user_by_id(user_id)
+    if not user or not user['is_admin']:
+        return jsonify({'status': 'error', 'message': 'Только администраторы могут удалять товары'}), 403
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('DELETE FROM products WHERE id = ?', (product_id,))
+    if cursor.rowcount == 0:
+        conn.close()
+        return jsonify({'status': 'error', 'message': 'Товар не найден'}), 404
+
+    conn.commit()
+    conn.close()
+    return jsonify({'status': 'success'})
+
+
+
+
+
 @application.route('/api/cabinet/register', methods=['POST'])
 def cabinet_register():
     data = request.json or {}
