@@ -144,7 +144,17 @@ def init_db():
                 ('Набор VAG/BMW клипс', 'КРЕПЕЖ', 1200, 'Профессиональный набор крепежных клипс для дверных карт и обшивки. Незаменимо при разборке салона.', '/img/part_6.png', json.dumps(['OEM Качество', '50 штук']), now, default_user_id)
             ]
         )
-    
+    # Таблица для отчетов мастеров по машинам
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS work_logs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            car_model TEXT NOT NULL,
+            works_done TEXT NOT NULL,
+            materials TEXT,
+            photos TEXT,
+            created_at TEXT NOT NULL
+        )
+    """)
     conn.commit()
     conn.close()
 
@@ -976,7 +986,56 @@ def manage_reports():
             except:
                 return jsonify({})
         return jsonify({})
+# ==============================================================
+# ЖУРНАЛ РАБОТ МАСТЕРОВ (WORK LOGS)
+# ==============================================================
 
+@application.route('/work-logs')
+def work_logs():
+    return render_template('work-logs.html')
+
+@application.route('/api/work-logs', methods=['GET', 'POST'])
+def handle_work_logs():
+    conn = get_db_connection()
+    
+    if request.method == 'POST':
+        data = request.json
+        car_model = data.get('car_model', '').strip()
+        works_done = data.get('works_done', '').strip()
+        materials = data.get('materials', '').strip()
+        photos = json.dumps(data.get('photos',[]))
+        now = datetime.utcnow().isoformat()
+        
+        try:
+            conn.execute(
+                'INSERT INTO work_logs (car_model, works_done, materials, photos, created_at) VALUES (?, ?, ?, ?, ?)',
+                (car_model, works_done, materials, photos, now)
+            )
+            conn.commit()
+            conn.close()
+            return jsonify({"status": "success"})
+        except Exception as e:
+            conn.close()
+            return jsonify({"status": "error", "message": str(e)}), 500
+
+    else: # GET запрос - получаем ленту
+        try:
+            rows = conn.execute('SELECT * FROM work_logs ORDER BY id DESC LIMIT 50').fetchall()
+            logs = []
+            for row in rows:
+                logs.append({
+                    "id": row["id"],
+                    "car_model": row["car_model"],
+                    "works_done": row["works_done"],
+                    "materials": row["materials"],
+                    "photos": json.loads(row["photos"]) if row["photos"] else [],
+                    "created_at": row["created_at"]
+                })
+            conn.close()
+            return jsonify({"logs": logs})
+        except Exception as e:
+            conn.close()
+            return jsonify({"status": "error", "message": str(e)}), 500
 # ==============================================================
 
 if __name__ == "__main__":
