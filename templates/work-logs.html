@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WILLS DETAILS | Отчеты мастеров</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --bg-main: #070709;
+            --bg-card: #141414;
+            --accent: #d32f2f;
+            --text-light: #ffffff;
+            --text-muted: #888888;
+            --border: rgba(255,255,255,0.08);
+            --radius: 16px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background: var(--bg-main); color: var(--text-light); padding-bottom: 50px; }
+        
+        .header { padding: 20px; border-bottom: 1px solid var(--border); text-align: center; background: rgba(7,7,9,0.9); position: sticky; top: 0; z-index: 10; backdrop-filter: blur(10px); }
+        .header h1 { font-family: 'Orbitron', sans-serif; font-size: 20px; text-transform: uppercase; letter-spacing: 2px; }
+        .header span { color: var(--accent); }
+
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        
+        /* ФОРМА ОТЧЕТА */
+        .log-form { background: var(--bg-card); padding: 25px; border-radius: var(--radius); border: 1px solid var(--border); margin-bottom: 40px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; font-size: 13px; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
+        .form-control { width: 100%; background: rgba(0,0,0,0.3); border: 1px solid var(--border); color: #fff; padding: 15px; border-radius: 8px; font-size: 15px; outline: none; transition: 0.3s; }
+        .form-control:focus { border-color: var(--accent); }
+        textarea.form-control { resize: vertical; min-height: 80px; }
+
+        /* БЫСТРЫЕ ТЕГИ */
+        .quick-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+        .tag-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: var(--text-muted); padding: 6px 12px; border-radius: 20px; font-size: 12px; cursor: pointer; transition: 0.2s; white-space: nowrap; }
+        .tag-btn:hover, .tag-btn:active { background: var(--text-light); color: #000; }
+
+        /* ФОТОГРАФИИ */
+        .photo-upload-btn { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 15px; background: rgba(255,255,255,0.03); border: 1px dashed var(--border); border-radius: 8px; color: var(--text-muted); cursor: pointer; transition: 0.3s; margin-bottom: 10px; }
+        .photo-upload-btn:hover { background: rgba(255,255,255,0.08); color: #fff; }
+        .photo-preview-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .photo-preview { position: relative; aspect-ratio: 1; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); }
+        .photo-preview img { width: 100%; height: 100%; object-fit: cover; }
+        .remove-photo { position: absolute; top: 5px; right: 5px; background: rgba(0,0,0,0.7); color: #fff; border: none; width: 24px; height: 24px; border-radius: 50%; cursor: pointer; font-size: 12px; }
+
+        .submit-btn { width: 100%; background: var(--accent); color: #fff; border: none; padding: 16px; border-radius: 8px; font-size: 15px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; margin-top: 10px; transition: 0.3s; }
+        .submit-btn:hover { background: #b71c1c; }
+
+        /* ЛЕНТА ОТЧЕТОВ */
+        .feed-title { font-family: 'Orbitron', sans-serif; font-size: 18px; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+        .log-card { background: var(--bg-card); border-radius: var(--radius); padding: 20px; margin-bottom: 20px; border: 1px solid var(--border); }
+        .lc-header { display: flex; justify-content: space-between; margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 10px; }
+        .lc-car { font-weight: 700; font-size: 18px; color: #fff; }
+        .lc-date { font-size: 12px; color: var(--text-muted); }
+        .lc-section { margin-bottom: 10px; }
+        .lc-label { font-size: 11px; text-transform: uppercase; color: var(--accent); font-weight: 700; margin-bottom: 4px; }
+        .lc-text { font-size: 14px; color: #ddd; line-height: 1.5; white-space: pre-wrap; }
+        .lc-photos { display: flex; gap: 10px; overflow-x: auto; padding-top: 10px; }
+        .lc-photos img { height: 80px; width: 80px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border); }
+
+        .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(100px); background: #10B981; color: #fff; padding: 12px 24px; border-radius: 30px; font-size: 14px; font-weight: 600; opacity: 0; transition: 0.4s; z-index: 9999; }
+        .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>WORK <span>LOGS</span></h1>
+    </div>
+
+    <div class="container">
+        <!-- ФОРМА ДОБАВЛЕНИЯ -->
+        <div class="log-form" id="logForm">
+            <div class="form-group">
+                <label>Машина (Марка, модель, кузов)</label>
+                <input type="text" id="carModel" class="form-control" placeholder="Например: Toyota Camry 70">
+            </div>
+
+            <div class="form-group">
+                <label>Выполненные работы</label>
+                <div class="quick-tags">
+                    <button type="button" class="tag-btn" onclick="addText('worksInput', 'Премиум шумоизоляция')">Премиум шумка</button>
+                    <button type="button" class="tag-btn" onclick="addText('worksInput', 'Полная шумоизоляция')">Полная шумка</button>
+                    <button type="button" class="tag-btn" onclick="addText('worksInput', 'Шумка дверей')">Двери</button>
+                    <button type="button" class="tag-btn" onclick="addText('worksInput', 'Шумка арок')">Арки</button>
+                    <button type="button" class="tag-btn" onclick="addText('worksInput', 'Моторный щит')">Моторный щит</button>
+                    <button type="button" class="tag-btn" onclick="addText('worksInput', 'Оклейка защитной пленкой')">Оклейка пленкой</button>
+                    <button type="button" class="tag-btn" onclick="addText('worksInput', 'Установка доводчиков')">Доводчики</button>
+                    <button type="button" class="tag-btn" onclick="addText('worksInput', 'Автозвук и Мультимедиа')">Автозвук</button>
+                </div>
+                <textarea id="worksInput" class="form-control" placeholder="Выберите теги выше или напишите текстом..."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>Расход материалов (Для склада)</label>
+                <div class="quick-tags">
+                    <button type="button" class="tag-btn" onclick="addText('materialsInput', 'AeroCell - ')">AeroCell</button>
+                    <button type="button" class="tag-btn" onclick="addText('materialsInput', 'Legenda 4 - ')">Legenda 4</button>
+                    <button type="button" class="tag-btn" onclick="addText('materialsInput', 'Akcent - ')">Akcent</button>
+                    <button type="button" class="tag-btn" onclick="addText('materialsInput', 'Полиуретан - ')">Пленка</button>
+                </div>
+                <textarea id="materialsInput" class="form-control" placeholder="Например: AeroCell - 12 листов"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>Фотографии работы</label>
+                <label class="photo-upload-btn">
+                    <i class="fa-solid fa-camera"></i> Прикрепить фото
+                    <input type="file" id="photoInput" multiple accept="image/*" style="display: none;" onchange="uploadPhotos(event)">
+                </label>
+                <div class="photo-preview-grid" id="photoPreview"></div>
+            </div>
+
+            <button class="submit-btn" onclick="saveLog()" id="submitBtn">Сохранить отчет</button>
+        </div>
+
+        <!-- ЛЕНТА ОТЧЕТОВ -->
+        <h2 class="feed-title">История работ</h2>
+        <div id="feedContainer">
+            <!-- Отчеты загружаются сюда -->
+            <div style="text-align: center; color: #888; padding: 20px;">Загрузка отчетов...</div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast">Отчет успешно сохранен!</div>
+
+    <script>
+        let uploadedPhotos =[];
+
+        // Функция вставки быстрых тегов в текстовое поле
+        function addText(inputId, text) {
+            const input = document.getElementById(inputId);
+            if (input.value.length > 0 && !input.value.endsWith(' ')) {
+                input.value += ', ';
+            }
+            input.value += text;
+            input.focus();
+        }
+
+        // Загрузка фото на сервер (используем уже готовый роут из app.py)
+        async function uploadPhotos(event) {
+            const files = event.target.files;
+            const btn = document.getElementById('submitBtn');
+            btn.innerText = "Загрузка фото...";
+            btn.disabled = true;
+
+            for (let file of files) {
+                const formData = new FormData();
+                formData.append('image', file);
+
+                try {
+                    const res = await fetch('/api/upload-report-image', { method: 'POST', body: formData });
+                    const data = await res.json();
+                    if (data.status === 'success') {
+                        uploadedPhotos.push(data.image_url);
+                        renderPhotoPreviews();
+                    }
+                } catch (e) {
+                    console.error("Ошибка загрузки фото", e);
+                }
+            }
+            btn.innerText = "Сохранить отчет";
+            btn.disabled = false;
+        }
+
+        function renderPhotoPreviews() {
+            const container = document.getElementById('photoPreview');
+            container.innerHTML = '';
+            uploadedPhotos.forEach((url, index) => {
+                container.innerHTML += `
+                    <div class="photo-preview">
+                        <img src="${url}">
+                        <button class="remove-photo" onclick="removePhoto(${index})"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                `;
+            });
+        }
+
+        function removePhoto(index) {
+            uploadedPhotos.splice(index, 1);
+            renderPhotoPreviews();
+        }
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.innerText = msg;
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 3000);
+        }
+
+        // Сохранение лога в БД
+        async function saveLog() {
+            const car = document.getElementById('carModel').value;
+            const works = document.getElementById('worksInput').value;
+            const materials = document.getElementById('materialsInput').value;
+
+            if (!car || !works) {
+                alert("Укажите машину и выполненные работы!");
+                return;
+            }
+
+            const payload = {
+                car_model: car,
+                works_done: works,
+                materials: materials,
+                photos: uploadedPhotos
+            };
+
+            const btn = document.getElementById('submitBtn');
+            btn.innerText = "Сохранение...";
+
+            try {
+                const res = await fetch('/api/work-logs', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                if (res.ok) {
+                    showToast("Отчет сохранен!");
+                    // Очистка формы
+                    document.getElementById('carModel').value = '';
+                    document.getElementById('worksInput').value = '';
+                    document.getElementById('materialsInput').value = '';
+                    uploadedPhotos =[];
+                    renderPhotoPreviews();
+                    loadFeed(); // Обновляем ленту
+                }
+            } catch (e) {
+                alert("Ошибка сохранения");
+            }
+            btn.innerText = "Сохранить отчет";
+        }
+
+        // Загрузка ленты
+        async function loadFeed() {
+            try {
+                const res = await fetch('/api/work-logs');
+                const data = await res.json();
+                const container = document.getElementById('feedContainer');
+                container.innerHTML = '';
+
+                if (data.logs.length === 0) {
+                    container.innerHTML = '<div style="text-align: center; color: #888;">Пока нет отчетов</div>';
+                    return;
+                }
+
+                data.logs.forEach(log => {
+                    let photosHtml = '';
+                    if (log.photos && log.photos.length > 0) {
+                        photosHtml = '<div class="lc-photos">' + log.photos.map(p => `<a href="${p}" target="_blank"><img src="${p}"></a>`).join('') + '</div>';
+                    }
+
+                    // Форматируем дату
+                    const dateObj = new Date(log.created_at);
+                    const dateStr = dateObj.toLocaleDateString('ru-RU') + ' в ' + dateObj.toLocaleTimeString('ru-RU', {hour: '2-digit', minute:'2-digit'});
+
+                    container.innerHTML += `
+                        <div class="log-card">
+                            <div class="lc-header">
+                                <div class="lc-car"><i class="fa-solid fa-car" style="color: var(--accent); margin-right: 5px;"></i> ${log.car_model}</div>
+                                <div class="lc-date">${dateStr}</div>
+                            </div>
+                            <div class="lc-section">
+                                <div class="lc-label">Выполнено:</div>
+                                <div class="lc-text">${log.works_done}</div>
+                            </div>
+                            ${log.materials ? `
+                            <div class="lc-section">
+                                <div class="lc-label">Материалы:</div>
+                                <div class="lc-text">${log.materials}</div>
+                            </div>` : ''}
+                            ${photosHtml}
+                        </div>
+                    `;
+                });
+            } catch (e) {
+                console.error("Ошибка загрузки ленты", e);
+            }
+        }
+
+        // Грузим ленту при старте
+        window.onload = loadFeed;
+    </script>
+</body>
+</html>
