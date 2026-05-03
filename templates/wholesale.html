@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WILLI MEDIA | Оптовые поставки</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ cache_buster('style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .wholesale-hero { padding: 160px 0 80px; text-align: center; }
+        .icon-showcase {
+            display: flex; align-items: center; justify-content: center;
+            height: 160px; font-size: 64px; color: var(--text-muted);
+            transition: color 0.5s ease, transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .product-card:hover .icon-showcase { color: var(--accent); transform: scale(1.1); }
+        .b2b-highlight { font-family: var(--font-head); font-size: 48px; font-weight: 900; margin: 20px 0; }
+        .b2b-cta-section { background: var(--bg-card); border-top: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color); padding: 80px 0; text-align: center; margin-top: 80px; }
+    </style>
+</head>
+<body>
+
+    <!-- Шапка (как на главной) -->
+    <header>
+        <div class="container header-inner">
+            <a href="{{ url_for('index') }}" class="logo">WILLI <span>MEDIA</span></a>
+            <nav class="nav-links">
+                <a href="{{ url_for('index') }}" class="nav-link">Главная</a>
+                <a href="{{ url_for('services') }}" class="nav-link">Услуги</a>
+                <a href="{{ url_for('catalog') }}" class="nav-link">Каталог</a>
+                <a href="{{ url_for('wholesale') }}" class="nav-link active">Опт (B2B)</a>
+            </nav>
+            <div style="display:flex; align-items:center; gap: 15px;">
+                <button class="burger-btn" onclick="toggleMenu()"><i class="fa-solid fa-bars"></i></button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Мобильное меню -->
+    <div class="mobile-menu" id="mobileMenu">
+        <button class="mobile-close" onclick="toggleMenu()">&times;</button>
+        <a href="{{ url_for('index') }}" class="mobile-link">ГЛАВНАЯ</a>
+        <a href="{{ url_for('services') }}" class="mobile-link">УСЛУГИ</a>
+        <a href="{{ url_for('wholesale') }}" class="mobile-link">B2B ОПТ</a>
+    </div>
+
+    <main>
+        <!-- Заголовок страницы -->
+        <section class="wholesale-hero reveal">
+            <div class="container">
+                <div class="visionary-subtitle">Для детейлинг-студий</div>
+                <h1>ОПТОВЫЕ <br> ПОСТАВКИ</h1>
+                <p style="max-width: 600px; margin: 0 auto; font-size: 16px;">
+                    Снабжаем студии премиальными расходниками. Экономия до 40% за счет прямых контрактов с заводами-производителями. Увеличьте маржинальность вашего бизнеса.
+                </p>
+            </div>
+        </section>
+
+        <!-- Сетка товаров B2B -->
+        <section class="section pt-0">
+            <div class="container grid-3">
+                
+                <!-- Товар 1 -->
+                <div class="product-card reveal delay-1">
+                    <div class="icon-showcase"><i class="fa-solid fa-flask"></i></div>
+                    <div class="product-meta">
+                        <div class="ui-badge dark" style="margin-bottom: 15px;">99.7% Очистка</div>
+                        <h3 class="product-title">Абсолютированный спирт</h3>
+                        <p class="product-desc" style="max-width: 100%;">
+                            Идеальная адгезия поверхностей. Исключает риск вздутия и отслоения дорогих полиуретановых пленок. Без разводов, без запаха сивухи. Экономия нервов и денег на переделках.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Товар 2 -->
+                <div class="product-card reveal delay-2">
+                    <div class="icon-showcase"><i class="fa-solid fa-puzzle-piece"></i></div>
+                    <div class="product-meta">
+                        <div class="ui-badge dark" style="margin-bottom: 15px;">OEM Стандарт</div>
+                        <h3 class="product-title">Профессиональные клипсы</h3>
+                        <p class="product-desc" style="max-width: 100%;">
+                            Упругий пластик с эффектом памяти (VAG/BMW/Китай). Салон собирается монолитно: без зазоров и "сверчков". Ноль сломанных креплений при тяжелых арматурных работах.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Товар 3 -->
+                <div class="product-card reveal delay-3">
+                    <div class="icon-showcase"><i class="fa-solid fa-layer-group"></i></div>
+                    <div class="product-meta">
+                        <div class="ui-badge dark" style="margin-bottom: 15px;">От 50 листов</div>
+                        <h3 class="product-title">Шумоизоляционные материалы</h3>
+                        <p class="product-desc" style="max-width: 100%;">
+                            Премиальная вибро- и звукоизоляция напрямую со склада. Снижаем вашу себестоимость на 35%. Гарантированная выгода и максимальная прибыль с каждой машины в студии.
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- CTA Блок -->
+        <section class="b2b-cta-section reveal">
+            <div class="container">
+                <i class="fa-solid fa-handshake" style="font-size: 40px; color: var(--accent); margin-bottom: 20px;"></i>
+                <h2>ПАРТНЕРСТВО <span style="color:var(--text-muted);">БЕЗ КОМПРОМИССОВ</span></h2>
+                <p style="max-width: 500px; margin: 0 auto 30px auto;">
+                    Получите специальные условия уже при первом заказе. Отгрузка в день обращения, доставка по всей РФ.
+                </p>
+                <a href="https://t.me/wills_deatails" target="_blank" class="btn btn-primary" style="padding: 20px 50px; font-size: 14px;">
+                    ЗАПРОСИТЬ ОПТОВЫЙ ПРАЙС-ЛИСТ
+                </a>
+            </div>
+        </section>
+    </main>
+
+    <!-- Тот же футер, что и везде -->
+    <footer>
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <h4>WILLI MEDIA</h4>
+                    <p>Премиальный тюнинг, оклейка и детейлинг. Официальный дилер.</p>
+                </div>
+                <div class="footer-col">
+                    <h4>Контакты</h4>
+                    <a href="https://t.me/wills_deatails" target="_blank">Telegram: @wills_deatails</a>
+                    <p>+7 968 855 3323</p>
+                </div>
+            </div>
+            <div class="copyright">© 2026 Willi Media. Все права защищены.</div>
+        </div>
+    </footer>
+
+    <script src="{{ cache_buster('script.js') }}"></script>
+</body>
+</html>

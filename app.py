@@ -27,7 +27,7 @@ application.secret_key = os.getenv('FLASK_SECRET_KEY', 'dev-secret-key-change-me
 # Конфиг для загрузки файлов
 UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'img', 'uploads')
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
-MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB
+MAX_FILE_SIZE = 50 * 1024 * 1024 # 50MB
 
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 application.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -711,6 +711,14 @@ def science():
 def services():
     return render_template('services.html')
 
+@application.route('/service')
+def service():
+    return render_template('service.html')
+
+@application.route('/wholesale')
+def wholesale():
+    return render_template('wholesale.html')
+    
 @application.route('/shop')
 def shop():
     return render_template('shop.html')
@@ -987,19 +995,64 @@ def manage_reports():
                 return jsonify({})
         return jsonify({})
 # ==============================================================
-# ЖУРНАЛ РАБОТ МАСТЕРОВ (WORK LOGS)
+# ЖУРНАЛ РАБОТ МАСТЕРОВ (WORK LOGS) С КАТЕГОРИЯМИ
 # ==============================================================
 
 @application.route('/work-logs')
 def work_logs():
     return render_template('work-logs.html')
 
+@application.route('/api/upload-report-image', methods=['POST'])
+def upload_report_image():
+    if 'image' not in request.files:
+        return jsonify({'status': 'error', 'message': 'Файл не найден'}), 400
+
+    file = request.files['image']
+    if file.filename == '':
+        return jsonify({'status': 'error', 'message': 'Файл не выбран'}), 400
+
+    try:
+        # Надежное переименование файла (спасает от русских символов)
+        ext = file.filename.rsplit('.', 1)[1].lower() if '.' in file.filename else 'jpg'
+        filename = f"report_{uuid.uuid4().hex}.{ext}"
+        
+        filepath = os.path.join(application.config['UPLOAD_FOLDER'], filename)
+        file.save(filepath)
+        
+        image_url = f'/img/uploads/{filename}'
+        return jsonify({'status': 'success', 'image_url': image_url})
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': f'Ошибка сохранения: {str(e)}'}), 500
+
 @application.route('/api/work-logs', methods=['GET', 'POST'])
 def handle_work_logs():
     conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    # Создаем таблицу, если ее нет
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS work_logs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            master_name TEXT NOT NULL,
+            category TEXT NOT NULL DEFAULT 'reports',
+            car_model TEXT,
+            works_done TEXT,
+            materials TEXT,
+            photos TEXT,
+            created_at TEXT NOT NULL
+        )
+    """)
+    # Обновляем структуру старой таблицы (если она уже была создана)
+    columns = [col[1] for col in cursor.execute('PRAGMA table_info(work_logs)').fetchall()]
+    if 'master_name' not in columns:
+        cursor.execute("ALTER TABLE work_logs ADD COLUMN master_name TEXT DEFAULT 'Не указан'")
+    if 'category' not in columns:
+        cursor.execute("ALTER TABLE work_logs ADD COLUMN category TEXT DEFAULT 'reports'")
     
     if request.method == 'POST':
         data = request.json
+        master_name = data.get('master_name', 'Не указан').strip()
+        category = data.get('category', 'reports').strip()
         car_model = data.get('car_model', '').strip()
         works_done = data.get('works_done', '').strip()
         materials = data.get('materials', '').strip()
@@ -1007,9 +1060,9 @@ def handle_work_logs():
         now = datetime.utcnow().isoformat()
         
         try:
-            conn.execute(
-                'INSERT INTO work_logs (car_model, works_done, materials, photos, created_at) VALUES (?, ?, ?, ?, ?)',
-                (car_model, works_done, materials, photos, now)
+            cursor.execute(
+                'INSERT INTO work_logs (master_name, category, car_model, works_done, materials, photos, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
+                (master_name, category, car_model, works_done, materials, photos, now)
             )
             conn.commit()
             conn.close()
@@ -1020,11 +1073,18 @@ def handle_work_logs():
 
     else: # GET запрос - получаем ленту
         try:
-            rows = conn.execute('SELECT * FROM work_logs ORDER BY id DESC LIMIT 50').fetchall()
-            logs = []
+            category_filter = request.args.get('category', 'all')
+            if category_filter == 'all':
+                rows = cursor.execute('SELECT * FROM work_logs ORDER BY id DESC LIMIT 100').fetchall()
+            else:
+                rows = cursor.execute('SELECT * FROM work_logs WHERE category = ? ORDER BY id DESC LIMIT 100', (category_filter,)).fetchall()
+            
+            logs =[]
             for row in rows:
                 logs.append({
                     "id": row["id"],
+                    "master_name": row["master_name"],
+                    "category": row["category"],
                     "car_model": row["car_model"],
                     "works_done": row["works_done"],
                     "materials": row["materials"],
@@ -1036,7 +1096,6 @@ def handle_work_logs():
         except Exception as e:
             conn.close()
             return jsonify({"status": "error", "message": str(e)}), 500
-# ==============================================================
 
 if __name__ == "__main__":
    application.run(host='0.0.0.0')
