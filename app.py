@@ -735,6 +735,14 @@ def forum():
 def configurator():
     return render_template('configurator.html')
 
+@application.route('/detailing-vip')
+def detailing_vip():
+    return render_template('detailing-vip.html')
+
+@application.route('/multimedia-vip')
+def multimedia_vip():
+    return render_template('multimedia-vip.html')
+
 
 @application.route('/api/forum/sections')
 def forum_sections():
