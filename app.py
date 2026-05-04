@@ -27,7 +27,7 @@ application.secret_key = os.getenv('FLASK_SECRET_KEY', 'dev-secret-key-change-me
 # Конфиг для загрузки файлов
 UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'img', 'uploads')
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
-MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB
+MAX_FILE_SIZE = 50 * 1024 * 1024 # 50MB
 
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 application.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -120,8 +120,7 @@ def init_db():
     if sections_count == 0:
         now = datetime.utcnow().isoformat()
         cursor.executemany(
-            'INSERT INTO forum_sections (slug, title, description, created_at) VALUES (?, ?, ?, ?)',
-            [
+            'INSERT INTO forum_sections (slug, title, description, created_at) VALUES (?, ?, ?, ?)',[
                 ('models', 'Обсуждение моделей', 'Обсуждаем марки, кузова, поколения и опыт владения.', now),
                 ('tuning', 'Тюнинг и детейлинг', 'Идеи, кейсы, материалы, советы по работам.', now),
                 ('market', 'Покупка и продажа', 'Вопросы по подбору, покупке и продаже авто/запчастей.', now)
@@ -136,8 +135,7 @@ def init_db():
         # или используем существующего администратора
         default_user_id = 1
         cursor.executemany(
-            'INSERT INTO products (name, category, price, description, image_url, badges, created_at, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-            [
+            'INSERT INTO products (name, category, price, description, image_url, badges, created_at, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',[
                 ('Legenda 4', 'ВИБРОИЗОЛЯЦИЯ', 650, 'Премиальная виброизоляция. Эффективно убирает гул металла и структурные вибрации.', '/img/part_1.png', json.dumps(['Убирает гул', 'Толщина 4мм']), now, default_user_id),
                 ('Relief', 'ЗВУКОПОГЛОТИТЕЛЬ', 850, 'Звукопоглощающий материал. Отлично поглощает шум и убирает эффект эха в дверях.', '/img/part_2.png', json.dumps(['Поглощает шум', 'Анти-эхо']), now, default_user_id),
                 ('Legenda 1.5', 'АНТИСКРИП', 450, 'Тонкий материал для обработки дверных карт. Полностью убирает скрипы пластиковой обшивки.', '/img/part_3.png', json.dumps(['Убирает скрип', 'Для обшивки']), now, default_user_id),
@@ -146,7 +144,17 @@ def init_db():
                 ('Набор VAG/BMW клипс', 'КРЕПЕЖ', 1200, 'Профессиональный набор крепежных клипс для дверных карт и обшивки. Незаменимо при разборке салона.', '/img/part_6.png', json.dumps(['OEM Качество', '50 штук']), now, default_user_id)
             ]
         )
-    
+    # Таблица для отчетов мастеров по машинам
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS work_logs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            car_model TEXT NOT NULL,
+            works_done TEXT NOT NULL,
+            materials TEXT,
+            photos TEXT,
+            created_at TEXT NOT NULL
+        )
+    """)
     conn.commit()
     conn.close()
 
@@ -250,15 +258,14 @@ def inject_cache_buster():
 
 @application.route('/submit_order', methods=['POST'])
 def submit_order():
-    # Этот эндпоинт для тестов без оплаты, но добавим сюда тоже логику
     try:
         data = request.json
         name = data.get('name', 'Не указано')
         phone = data.get('phone', 'Не указано')
         address = data.get('address', 'Не указано')
-        cart_items = data.get('items', [])
+        cart_items = data.get('items',[])
         total_price = data.get('total_price', 0)
-        promo_code = data.get('promo_code', None) # Ловим промокод
+        promo_code = data.get('promo_code', None)
 
         msg = f"<b>🏛 НОВЫЙ ЗАКАЗ [ROUCEL SHOP]</b>\n"
         msg += f"<i>Curated Beauty Architecture</i>\n\n"
@@ -297,23 +304,16 @@ def submit_order():
 def create_payment():
     try:
         data = request.json
-        cart_items = data.get('items', [])
-        promo_code = data.get('promo_code') # Получаем промокод от фронтенда
+        cart_items = data.get('items',[])
+        promo_code = data.get('promo_code') 
         
         if not cart_items:
             return jsonify({"status": "error", "message": "Корзина пуста"}), 400
-
-        # Считаем сумму заново на сервере для безопасности, но учитываем скидку
-        # (В идеале скидку надо валидировать на сервере, но пока верим фронту для скорости)
-        # Для простоты сейчас возьмем итоговую сумму, которую прислал фронт, если она есть,
-        # либо пересчитаем без скидки. 
-        # ПРАВИЛЬНЫЙ ПУТЬ: Пересчитать сумму.
         
         raw_total = 0
         for item in cart_items:
             raw_total += float(item.get('price', 0)) * int(item.get('quantity', 1))
 
-        # Если был промокод, применяем скидку (Hardcoded logic дублируется с JS)
         discount_factor = 0
         if promo_code:
             promo_upper = promo_code.upper()
@@ -325,21 +325,12 @@ def create_payment():
         discount_amount = raw_total * discount_factor
         final_price = raw_total - discount_amount
 
-        # Формируем чек
-        items_for_receipt = []
-        
-        # ЮKassa требует, чтобы сумма позиций сходилась с итогом.
-        # Если есть скидка, мы должны пропорционально уменьшить цену каждой позиции в чеке
-        # Или добавить скидку отдельной строкой (но ЮKassa так не умеет обычно).
-        # Проще всего: "размазать" скидку по товарам.
-        
+        items_for_receipt =[]
         coefficient = final_price / raw_total if raw_total > 0 else 1
 
         for item in cart_items:
             original_price = float(item.get('price', 0))
             qty = int(item.get('quantity') or 1)
-            
-            # Цена товара со скидкой
             discounted_item_price = original_price * coefficient
             
             items_for_receipt.append({
@@ -375,7 +366,7 @@ def create_payment():
                 "name": data.get('name'),
                 "phone": data.get('phone'),
                 "address": data.get('address'),
-                "promo_code": promo_code if promo_code else "Нет", # Сохраняем промокод в метаданных
+                "promo_code": promo_code if promo_code else "Нет",
                 "order_summary": ", ".join([f"{i.get('name')} x{i.get('quantity', 1)}" for i in cart_items]),
                 "user_id": str(session.get('user_id') or '')
             },
@@ -405,7 +396,7 @@ def yookassa_webhook():
             user_id = meta.get('user_id') if meta else None
             
             order_items = meta.get('order_summary', 'Состав не указан')
-            promo = meta.get('promo_code', 'Нет') # Достаем промокод
+            promo = meta.get('promo_code', 'Нет')
             
             msg = f"✅ <b>ОПЛАТА ПОЛУЧЕНА [ROUCEL SHOP]</b>\n\n"
             msg += f"👤 <b>Клиент:</b> {meta.get('name')}\n"
@@ -429,11 +420,9 @@ def yookassa_webhook():
                 add_points(int(user_id), cashback, f"Кэшбэк за заказ {payment_info.get('id', 'payment')}")
             if promo == "PEARL20":
                 chat_id, thread_id = THREAD_ID.split("_")
-                # Если был использован промокод Pearl20, отправляем данные в наш API для начисления комиссии блогеру
                 try:
                     msg = f"Новый заказ через промокод {promo}\n"
                     msg += f"Сумма заказа: {payment_info['amount']['value']} {payment_info['amount']['currency']}"
-                    # Здесь нужно указать реальный URL вашего API сервера
                     api_url = "http://5.23.52.31:8000/webhook/sale"
                     headers = {"X-API-Key": "SUPER_SECRET_KEY_123"}
                     requests.post(url, json={"chat_id": chat_id, "message_thread_id": int(thread_id), "text": msg})
@@ -480,14 +469,9 @@ def upload_image():
         return jsonify({'status': 'error', 'message': 'Недопустимый формат файла. Используйте PNG, JPG, JPEG, GIF или WebP'}), 400
 
     try:
-        # Генерируем уникальное имя файла
         filename = f"product_{uuid.uuid4().hex}_{secure_filename(file.filename)}"
         filepath = os.path.join(application.config['UPLOAD_FOLDER'], filename)
-        
-        # Сохраняем файл
         file.save(filepath)
-        
-        # Возвращаем URL для доступа
         image_url = f'/img/uploads/{filename}'
         return jsonify({'status': 'success', 'image_url': image_url})
     
@@ -517,7 +501,7 @@ def create_product():
     price_str = str(data.get('price') or '0').strip()
     description = (data.get('description') or '').strip()
     image_url = (data.get('image_url') or '').strip()
-    badges = data.get('badges') or []
+    badges = data.get('badges') or[]
 
     if not name or not category or not price_str or not description:
         return jsonify({'status': 'error', 'message': 'Заполните все обязательные поля'}), 400
@@ -723,11 +707,18 @@ def reviews():
 def science():
     return render_template('science.html')
 
-
 @application.route('/services')
 def services():
     return render_template('services.html')
 
+@application.route('/service')
+def service():
+    return render_template('service.html')
+
+@application.route('/wholesale')
+def wholesale():
+    return render_template('wholesale.html')
+    
 @application.route('/shop')
 def shop():
     return render_template('shop.html')
@@ -743,6 +734,14 @@ def forum():
 @application.route('/configurator')
 def configurator():
     return render_template('configurator.html')
+
+@application.route('/detailing-vip')
+def detailing_vip():
+    return render_template('detailing-vip.html')
+
+@application.route('/multimedia-vip')
+def multimedia_vip():
+    return render_template('multimedia-vip.html')
 
 
 @application.route('/api/forum/sections')
@@ -863,7 +862,7 @@ def forum_posts():
     conn.close()
     return jsonify({
         'topic': serialize_forum_row(topic),
-        'posts': [serialize_forum_row(row) for row in posts]
+        'posts':[serialize_forum_row(row) for row in posts]
     })
 
 
@@ -926,7 +925,7 @@ def car_summary():
             },
             json={
                 'model': 'openai/gpt-oss-120b:free',
-                'messages': [
+                'messages':[
                     {
                         'role': 'system',
                         'content': 'Ты automotive-эксперт и пишешь очень ёмко, красиво и по делу.'
@@ -969,6 +968,142 @@ def static_file(path):
 @application.route('/config')
 def get_config():
     return jsonify({'YANDEX_MAPS_API_KEY': YANDEX_API_KEY})
+
+# ==============================================================
+# НОВЫЙ БЛОК ДЛЯ ДАШБОРДА РУКОВОДИТЕЛЯ (ДОБАВЛЕНО)
+# ==============================================================
+
+@application.route('/team-reports')
+def team_reports():
+    # Отдаем наш новый HTML файл из папки templates
+    return render_template('team-reports.html')
+
+@application.route('/api/reports', methods=['GET', 'POST'])
+def manage_reports():
+    # Файл reports.json будет создан автоматически рядом с app.py
+    reports_file = os.path.join(os.path.dirname(__file__), 'reports.json')
+    
+    if request.method == 'POST':
+        # Сохранение данных
+        data = request.json
+        try:
+            with open(reports_file, 'w', encoding='utf-8') as f:
+                json.dump(data, f, ensure_ascii=False, indent=4)
+            return jsonify({"status": "success"})
+        except Exception as e:
+            return jsonify({"status": "error", "message": str(e)}), 500
+    
+    else:
+        # Загрузка данных
+        if os.path.exists(reports_file):
+            try:
+                with open(reports_file, 'r', encoding='utf-8') as f:
+                    return jsonify(json.load(f))
+            except:
+                return jsonify({})
+        return jsonify({})
+# ==============================================================
+# ЖУРНАЛ РАБОТ МАСТЕРОВ (WORK LOGS) С КАТЕГОРИЯМИ
+# ==============================================================
+
+@application.route('/work-logs')
+def work_logs():
+    return render_template('work-logs.html')
+
+@application.route('/api/upload-report-image', methods=['POST'])
+def upload_report_image():
+    if 'image' not in request.files:
+        return jsonify({'status': 'error', 'message': 'Файл не найден'}), 400
+
+    file = request.files['image']
+    if file.filename == '':
+        return jsonify({'status': 'error', 'message': 'Файл не выбран'}), 400
+
+    try:
+        # Надежное переименование файла (спасает от русских символов)
+        ext = file.filename.rsplit('.', 1)[1].lower() if '.' in file.filename else 'jpg'
+        filename = f"report_{uuid.uuid4().hex}.{ext}"
+        
+        filepath = os.path.join(application.config['UPLOAD_FOLDER'], filename)
+        file.save(filepath)
+        
+        image_url = f'/img/uploads/{filename}'
+        return jsonify({'status': 'success', 'image_url': image_url})
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': f'Ошибка сохранения: {str(e)}'}), 500
+
+@application.route('/api/work-logs', methods=['GET', 'POST'])
+def handle_work_logs():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    # Создаем таблицу, если ее нет
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS work_logs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            master_name TEXT NOT NULL,
+            category TEXT NOT NULL DEFAULT 'reports',
+            car_model TEXT,
+            works_done TEXT,
+            materials TEXT,
+            photos TEXT,
+            created_at TEXT NOT NULL
+        )
+    """)
+    # Обновляем структуру старой таблицы (если она уже была создана)
+    columns = [col[1] for col in cursor.execute('PRAGMA table_info(work_logs)').fetchall()]
+    if 'master_name' not in columns:
+        cursor.execute("ALTER TABLE work_logs ADD COLUMN master_name TEXT DEFAULT 'Не указан'")
+    if 'category' not in columns:
+        cursor.execute("ALTER TABLE work_logs ADD COLUMN category TEXT DEFAULT 'reports'")
+    
+    if request.method == 'POST':
+        data = request.json
+        master_name = data.get('master_name', 'Не указан').strip()
+        category = data.get('category', 'reports').strip()
+        car_model = data.get('car_model', '').strip()
+        works_done = data.get('works_done', '').strip()
+        materials = data.get('materials', '').strip()
+        photos = json.dumps(data.get('photos',[]))
+        now = datetime.utcnow().isoformat()
+        
+        try:
+            cursor.execute(
+                'INSERT INTO work_logs (master_name, category, car_model, works_done, materials, photos, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
+                (master_name, category, car_model, works_done, materials, photos, now)
+            )
+            conn.commit()
+            conn.close()
+            return jsonify({"status": "success"})
+        except Exception as e:
+            conn.close()
+            return jsonify({"status": "error", "message": str(e)}), 500
+
+    else: # GET запрос - получаем ленту
+        try:
+            category_filter = request.args.get('category', 'all')
+            if category_filter == 'all':
+                rows = cursor.execute('SELECT * FROM work_logs ORDER BY id DESC LIMIT 100').fetchall()
+            else:
+                rows = cursor.execute('SELECT * FROM work_logs WHERE category = ? ORDER BY id DESC LIMIT 100', (category_filter,)).fetchall()
+            
+            logs =[]
+            for row in rows:
+                logs.append({
+                    "id": row["id"],
+                    "master_name": row["master_name"],
+                    "category": row["category"],
+                    "car_model": row["car_model"],
+                    "works_done": row["works_done"],
+                    "materials": row["materials"],
+                    "photos": json.loads(row["photos"]) if row["photos"] else [],
+                    "created_at": row["created_at"]
+                })
+            conn.close()
+            return jsonify({"logs": logs})
+        except Exception as e:
+            conn.close()
+            return jsonify({"status": "error", "message": str(e)}), 500
 
 if __name__ == "__main__":
    application.run(host='0.0.0.0')

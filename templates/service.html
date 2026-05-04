@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WILLI MEDIA | Премиум-услуги</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ cache_buster('style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .services-hero { padding: 140px 0 60px; text-align: center; }
+        
+        /* Липкое суб-меню */
+        .sticky-sub-nav {
+            position: sticky;
+            top: 80px; /* Отступ под основной хедер */
+            z-index: 900;
+            background: var(--glass-bg);
+            backdrop-filter: var(--blur);
+            border-bottom: 1px solid var(--border-color);
+            padding: 15px 0;
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            overflow-x: auto; /* Для скролла на мобилках */
+            scrollbar-width: none;
+        }
+        .sticky-sub-nav::-webkit-scrollbar { display: none; }
+        .sticky-link {
+            font-family: var(--font-head);
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-decoration: none;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            white-space: nowrap;
+            transition: color var(--transition-fast);
+        }
+        .sticky-link:hover { color: var(--text-main); }
+
+        /* Типографические блоки услуг */
+        .service-block {
+            padding: 100px 0;
+            border-bottom: 1px solid var(--border-color);
+            position: relative;
+            overflow: hidden;
+        }
+        .service-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 60px;
+            align-items: center;
+        }
+        .service-icon-wrap {
+            font-size: 180px;
+            color: var(--text-muted);
+            opacity: 0.05;
+            text-align: center;
+            line-height: 1;
+            transition: opacity 1s ease;
+        }
+        .service-block:hover .service-icon-wrap { opacity: 0.15; color: var(--accent); }
+        
+        .service-content h2 { text-align: left; margin-bottom: 15px; font-size: clamp(28px, 5vw, 42px); }
+        .service-bullets { margin-top: 25px; list-style: none; padding: 0; }
+        .service-bullets li { display: flex; gap: 12px; font-size: 14px; margin-bottom: 12px; color: var(--text-muted); align-items: flex-start;}
+        .service-bullets i { color: var(--accent); font-size: 12px; margin-top: 4px; }
+
+        @media(max-width: 900px) {
+            .service-grid { grid-template-columns: 1fr; gap: 30px; }
+            .service-icon-wrap { font-size: 100px; display: none; } /* Скрываем гигантскую иконку на мобилках, чтобы не занимала экран */
+            .service-block { padding: 60px 0; }
+            .sticky-sub-nav { justify-content: flex-start; padding: 15px 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="container header-inner">
+            <a href="{{ url_for('index') }}" class="logo">WILLI <span>MEDIA</span></a>
+            <nav class="nav-links">
+                <a href="{{ url_for('index') }}" class="nav-link">Главная</a>
+                <a href="{{ url_for('services') }}" class="nav-link active">Услуги</a>
+                <a href="{{ url_for('catalog') }}" class="nav-link">Каталог</a>
+            </nav>
+            <div style="display:flex; align-items:center; gap: 15px;">
+                <button class="burger-btn" onclick="toggleMenu()"><i class="fa-solid fa-bars"></i></button>
+            </div>
+        </div>
+    </header>
+
+    <div class="mobile-menu" id="mobileMenu">
+        <button class="mobile-close" onclick="toggleMenu()">&times;</button>
+        <a href="{{ url_for('index') }}" class="mobile-link">ГЛАВНАЯ</a>
+        <a href="{{ url_for('services') }}" class="mobile-link">УСЛУГИ</a>
+    </div>
+
+    <main>
+        <!-- Герой-блок -->
+        <section class="services-hero reveal">
+            <div class="container">
+                <div class="visionary-subtitle">Высший стандарт</div>
+                <h1>ПРЕМИУМ <br> УСЛУГИ</h1>
+                <p style="max-width: 600px; margin: 0 auto;">
+                    Интеллектуальный тюнинг. Мы не просто клеим пленку или разбираем салон — мы инвестируем в ваш акустический, визуальный и тактильный комфорт.
+                </p>
+            </div>
+        </section>
+
+        <!-- Липкое меню -->
+        <nav class="sticky-sub-nav">
+            <a href="#noise" class="sticky-link">Шумоизоляция</a>
+            <a href="#film" class="sticky-link">Оклейка Пленкой</a>
+            <a href="#audio" class="sticky-link">Автозвук & Мультимедиа</a>
+            <a href="#doors" class="sticky-link">Доводчики Дверей</a>
+        </nav>
+
+        <!-- БЛОК 1: ШУМОИЗОЛЯЦИЯ -->
+        <div id="noise" class="service-block reveal">
+            <div class="container service-grid">
+                <div class="service-icon-wrap"><i class="fa-solid fa-volume-xmark"></i></div>
+                <div class="service-content">
+                    <div class="visionary-badges" style="display:flex; gap:10px; margin-bottom:15px;">
+                        <span class="ui-badge dark">До -60% шума</span>
+                        <span class="ui-badge success">4-слойная технология</span>
+                    </div>
+                    <h2>АКУСТИЧЕСКИЙ <span style="color:var(--text-muted);">КОМФОРТ</span></h2>
+                    <p>
+                        Убираем гул от дороги и шин, устраняем скрип пластика и раскрываем истинный потенциал штатной акустики. Создаем капсулу тишины, в которой можно разговаривать шепотом на скорости 130 км/ч.
+                    </p>
+                    <ul class="service-bullets">
+                        <li><i class="fa-solid fa-check"></i> Полная обработка зон: двери, арки, пол, торпедо, потолок.</li>
+                        <li><i class="fa-solid fa-check"></i> Использование облегченных премиум-материалов (без перегруза петель).</li>
+                        <li><i class="fa-solid fa-check"></i> Идеальная сборка салона с заменой всех изношенных клипс.</li>
+                    </ul>
+                    <a href="https://t.me/wills_deatails" target="_blank" class="btn btn-ghost" style="margin-top: 25px;">УЗНАТЬ ЦЕНУ -></a>
+                </div>
+            </div>
+        </div>
+
+        <!-- БЛОК 2: ОКЛЕЙКА -->
+        <div id="film" class="service-block reveal">
+            <div class="container service-grid">
+                <div class="service-content" style="order: 2;">
+                    <div class="visionary-badges" style="display:flex; gap:10px; margin-bottom:15px;">
+                        <span class="ui-badge dark">Толщина 200 мкр</span>
+                        <span class="ui-badge success">Эффект Self-Healing</span>
+                    </div>
+                    <h2>НЕВИДИМАЯ <span style="color:var(--text-muted);">БРОНЯ</span></h2>
+                    <p>
+                        Защита кузова полиуретаном премиум-класса. Пленка отражает удары камней, защищает от пескоструя, реагентов и птичьего помета. При нагреве на солнце мелкие царапины затягиваются сами.
+                    </p>
+                    <ul class="service-bullets">
+                        <li><i class="fa-solid fa-check"></i> Глянцевый или матовый эффект (полное преображение авто).</li>
+                        <li><i class="fa-solid fa-check"></i> Точный раскрой по лекалам без разборки кузова и порезов ножом.</li>
+                        <li><i class="fa-solid fa-check"></i> Сохраняет заводское ЛКП, повышая стоимость авто при перепродаже на 15-20%.</li>
+                    </ul>
+                    <a href="https://t.me/wills_deatails" target="_blank" class="btn btn-ghost" style="margin-top: 25px;">УЗНАТЬ ЦЕНУ -></a>
+                </div>
+                <div class="service-icon-wrap" style="order: 1;"><i class="fa-solid fa-shield-halved"></i></div>
+            </div>
+        </div>
+
+        <!-- БЛОК 3: АВТОЗВУК И СИМ -->
+        <div id="audio" class="service-block reveal">
+            <div class="container service-grid">
+                <div class="service-icon-wrap"><i class="fa-solid fa-microchip"></i></div>
+                <div class="service-content">
+                    <div class="visionary-badges" style="display:flex; gap:10px; margin-bottom:15px;">
+                        <span class="ui-badge dark">LiXiang / Zeekr</span>
+                        <span class="ui-badge success">DSP Процессоры</span>
+                    </div>
+                    <h2>МУЛЬТИМЕДИА & <span style="color:var(--text-muted);">АВТОЗВУК</span></h2>
+                    <p>
+                        Глубокая интеграция в цифровую среду автомобиля. Профессиональная пайка российских SIM-карт для китайских электрокаров и построение правильной звуковой сцены с эффектом концертного зала.
+                    </p>
+                    <ul class="service-bullets">
+                        <li><i class="fa-solid fa-check"></i> Пайка SIM с сохранением дилерской гарантии и штатной телематики.</li>
+                        <li><i class="fa-solid fa-check"></i> Замена штатной акустики (СЧ/ВЧ динамики, сабвуферы "стелс").</li>
+                        <li><i class="fa-solid fa-check"></i> Установка и филигранная настройка DSP-усилителей за 1 день.</li>
+                    </ul>
+                    <a href="https://t.me/wills_deatails" target="_blank" class="btn btn-ghost" style="margin-top: 25px;">УЗНАТЬ ЦЕНУ -></a>
+                </div>
+            </div>
+        </div>
+
+        <!-- БЛОК 4: ДОВОДЧИКИ -->
+        <div id="doors" class="service-block reveal" style="border-bottom: none;">
+            <div class="container service-grid">
+                <div class="service-content" style="order: 2;">
+                    <div class="visionary-badges" style="display:flex; gap:10px; margin-bottom:15px;">
+                        <span class="ui-badge dark">Pin-drop silence</span>
+                        <span class="ui-badge success">Штатные места</span>
+                    </div>
+                    <h2>ДОВОДЧИКИ <span style="color:var(--text-muted);">ДВЕРЕЙ</span></h2>
+                    <p>
+                        Абсолютная эстетика каждого касания. Бесшумное втягивание двери в дверной проем. Никаких раздражающих громких хлопков и перекосов замков.
+                    </p>
+                    <ul class="service-bullets">
+                        <li><i class="fa-solid fa-check"></i> Установка Pin-to-Pin (в штатные разъемы, без сверления и колхоза).</li>
+                        <li><i class="fa-solid fa-check"></i> Защита от защемления пальцев (умный механизм отскока).</li>
+                        <li><i class="fa-solid fa-check"></i> Продлевает жизнь замкам и повышает премиальный статус авто.</li>
+                    </ul>
+                    <a href="https://t.me/wills_deatails" target="_blank" class="btn btn-primary" style="margin-top: 25px;">УЗНАТЬ ЦЕНУ -></a>
+                </div>
+                <div class="service-icon-wrap" style="order: 1;"><i class="fa-solid fa-door-closed"></i></div>
+            </div>
+        </div>
+
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <h4>WILLI MEDIA</h4>
+                    <p>Премиальный тюнинг, оклейка и детейлинг. Официальный дилер.</p>
+                </div>
+                <div class="footer-col">
+                    <h4>Контакты</h4>
+                    <a href="https://t.me/wills_deatails" target="_blank">Telegram: @wills_deatails</a>
+                    <p>+7 968 855 3323</p>
+                </div>
+            </div>
+            <div class="copyright">© 2026 Willi Media. Все права защищены.</div>
+        </div>
+    </footer>
+
+    <script src="{{ cache_buster('script.js') }}"></script>
+</body>
+</html>
