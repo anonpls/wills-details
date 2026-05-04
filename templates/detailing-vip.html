@@ -11,43 +11,19 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
-        /* =========================================
-           WILLS DETAILS B2B/VIP DESIGN SYSTEM
-           ========================================= */
         :root {
-            --bg-dark: #07090F;
-            --bg-dark-surface: #0D111A;
-            --text-light: #FFFFFF;
-            --text-muted-light: #8E9BAE;
-            
-            --bg-light: #F4F6F9;
-            --bg-light-surface: #FFFFFF;
-            --text-dark: #0B0F19;
-            --text-muted-dark: #4A5568;
-            
-            /* Премиальный красный акцент */
-            --accent: #E63946; 
-            --accent-hover: #D90429;
-            --accent-glow: rgba(230, 57, 70, 0.2);
-            
-            --font-head: 'Orbitron', sans-serif;
-            --font-body: 'Inter', sans-serif;
-            --radius-md: 12px;
-            --radius-lg: 20px;
-            --transition: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            --bg-dark: #07090F; --bg-dark-surface: #0D111A; --text-light: #FFFFFF; --text-muted-light: #8E9BAE;
+            --bg-light: #F4F6F9; --bg-light-surface: #FFFFFF; --text-dark: #0B0F19; --text-muted-dark: #4A5568;
+            --accent: #E63946; --accent-hover: #D90429; --accent-glow: rgba(230, 57, 70, 0.2);
+            --font-head: 'Orbitron', sans-serif; --font-body: 'Inter', sans-serif;
+            --radius-md: 12px; --radius-lg: 20px; --transition: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         html { scroll-behavior: smooth; }
-        
-        body {
-            font-family: var(--font-body); line-height: 1.6; -webkit-font-smoothing: antialiased;
-            background-color: var(--bg-dark); color: var(--text-light); overflow: hidden; 
-        }
-
+        body { font-family: var(--font-body); line-height: 1.6; -webkit-font-smoothing: antialiased; background-color: var(--bg-dark); color: var(--text-light); overflow: hidden; }
         h1, h2, h3, h4 { font-family: var(--font-head); font-weight: 700; line-height: 1.2; text-transform: uppercase; letter-spacing: 1px;}
         img { max-width: 100%; display: block; object-fit: cover; }
-        
         .container { width: 90%; max-width: 1400px; margin: 0 auto; }
         .section { padding: 120px 0; }
         
@@ -55,15 +31,12 @@
         .theme-dark { background-color: var(--bg-dark); color: var(--text-light); border-top: 1px solid rgba(255,255,255,0.05); }
         .text-accent { color: var(--accent); text-shadow: 0 0 20px var(--accent-glow); }
 
-        .btn {
-            display: inline-flex; align-items: center; justify-content: center;
-            padding: 18px 36px; font-family: var(--font-body); font-weight: 600; font-size: 15px; text-transform: uppercase; letter-spacing: 1px;
-            text-decoration: none; border-radius: 4px; transition: var(--transition); border: none; cursor: pointer;
-        }
+        /* Magnetic button logic handled in JS, added smooth transition back */
+        .btn { display: inline-flex; align-items: center; justify-content: center; padding: 18px 36px; font-family: var(--font-body); font-weight: 600; font-size: 15px; text-transform: uppercase; letter-spacing: 1px; text-decoration: none; border-radius: 4px; border: none; cursor: pointer; transition: transform 0.2s ease-out, background 0.3s, box-shadow 0.3s; will-change: transform; }
         .btn-primary { background: var(--accent); color: #fff; box-shadow: 0 10px 25px var(--accent-glow); }
-        .btn-primary:hover { background: var(--accent-hover); transform: translateY(-3px); box-shadow: 0 15px 35px rgba(230, 57, 70, 0.4); }
+        .btn-primary:hover { background: var(--accent-hover); box-shadow: 0 15px 35px rgba(230, 57, 70, 0.4); }
         .btn-outline { background: transparent; border: 1px solid rgba(255,255,255,0.3); color: var(--text-light); }
-        .btn-outline:hover { border-color: #fff; background: rgba(255,255,255,0.05); transform: translateY(-3px); }
+        .btn-outline:hover { border-color: #fff; background: rgba(255,255,255,0.05); }
         .theme-light .btn-outline { border-color: #CBD5E1; color: var(--text-dark); }
         .theme-light .btn-outline:hover { border-color: var(--accent); background: rgba(230, 57, 70, 0.05); color: var(--accent); }
 
@@ -72,27 +45,14 @@
         .section-head p { font-size: 18px; color: var(--text-muted-dark); }
         .theme-dark .section-head p { color: var(--text-muted-light); }
 
-        /* =========================================
-           AUTH & LOADING SCREENS
-           ========================================= */
-        #auth-screen, #loading-screen {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: url('detailing-hero.jpg') center/cover no-repeat; z-index: 9999;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-        }
+        /* AUTH & LOADING */
+        #auth-screen, #loading-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: url('/img/detailing-hero.jpg') center/cover no-repeat; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         #auth-screen::before, #loading-screen::before { content: ''; position: absolute; inset: 0; background: rgba(7, 9, 15, 0.95); backdrop-filter: blur(15px); }
-        .auth-box, .loading-box {
-            position: relative; z-index: 2; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1);
-            padding: 50px 40px; border-radius: var(--radius-lg); text-align: center; max-width: 450px; width: 90%;
-            box-shadow: 0 30px 60px rgba(0,0,0,0.8);
-        }
+        .auth-box, .loading-box { position: relative; z-index: 2; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); padding: 50px 40px; border-radius: var(--radius-lg); text-align: center; max-width: 450px; width: 90%; box-shadow: 0 30px 60px rgba(0,0,0,0.8); }
         .auth-box i { font-size: 40px; color: var(--accent); margin-bottom: 20px; text-shadow: 0 0 20px var(--accent-glow); }
         .auth-box h2 { font-size: 24px; margin-bottom: 10px; }
         .auth-box p { font-size: 14px; color: var(--text-muted-light); margin-bottom: 30px; font-family: var(--font-body); text-transform: none;}
-        .pwd-input {
-            width: 100%; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); color: #fff;
-            padding: 16px 20px; border-radius: 4px; font-family: var(--font-head); font-size: 18px; margin-bottom: 20px; text-align: center; letter-spacing: 5px; font-weight: 700;
-        }
+        .pwd-input { width: 100%; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 16px 20px; border-radius: 4px; font-family: var(--font-head); font-size: 18px; margin-bottom: 20px; text-align: center; letter-spacing: 5px; font-weight: 700; }
         .pwd-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
         .pwd-error { color: var(--accent); font-size: 13px; margin-top: -10px; margin-bottom: 15px; display: none; font-family: var(--font-body); }
         
@@ -100,17 +60,12 @@
         .progress-bar { height: 100%; width: 0%; background: var(--accent); transition: width 0.1s linear; box-shadow: 0 0 15px var(--accent); }
         .loading-text { font-size: 12px; color: var(--text-muted-light); margin-top: 15px; font-family: monospace; letter-spacing: 1px; }
         
-        .shake { animation: shake 0.4s; }
-        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-10px); } 75% { transform: translateX(10px); } }
-        .hidden { display: none !important; }
-        .fade-in { animation: fadeIn 1s forwards; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .shake { animation: shake 0.4s; } @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-10px); } 75% { transform: translateX(10px); } }
+        .hidden { display: none !important; } .fade-in { animation: fadeIn 1s forwards; } @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         #main-content { display: none; }
 
-        /* =========================================
-           БЛОКИ СТРУКТУРЫ
-           ========================================= */
-        .hero { position: relative; min-height: 100vh; display: flex; align-items: center; padding-top: 80px; border-top: none !important; background: url('detailing-hero.jpg') center/cover no-repeat; }
+        /* BLOCKS */
+        .hero { position: relative; min-height: 100vh; display: flex; align-items: center; padding-top: 80px; border-top: none !important; background: url('/img/detailing-hero.jpg') center/cover no-repeat; }
         .hero::before { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(7, 9, 15, 0.95) 0%, rgba(7, 9, 15, 0.6) 100%); z-index: 1; }
         .hero-content { position: relative; z-index: 2; max-width: 900px; }
         .hero-badge { display: inline-flex; align-items: center; gap: 10px; padding: 8px 16px; background: var(--accent-glow); border: 1px solid rgba(230,57,70, 0.3); border-radius: 4px; color: var(--accent); font-family: var(--font-body); font-size: 12px; font-weight: 700; text-transform: uppercase; margin-bottom: 30px; letter-spacing: 1px; }
@@ -118,7 +73,6 @@
         .hero p { font-size: clamp(16px, 2vw, 20px); color: var(--text-muted-light); margin-bottom: 40px; max-width: 700px; font-family: var(--font-body); text-transform: none; }
         .hero-actions { display: flex; gap: 20px; flex-wrap: wrap; }
 
-        /* Glassmorphism на светлом */
         .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px; background-image: radial-gradient(circle at 10% 20%, rgba(230, 57, 70, 0.03) 0%, transparent 20%); }
         .glass-card { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border: 1px solid rgba(0, 0, 0, 0.05); box-shadow: 0 20px 40px rgba(0, 0, 0, 0.03); border-radius: var(--radius-lg); padding: 40px; transition: var(--transition); }
         .glass-card:hover { transform: translateY(-5px); box-shadow: 0 30px 60px rgba(230, 57, 70, 0.08); border-color: rgba(230, 57, 70, 0.2); }
@@ -149,25 +103,16 @@
         .process-card h3 { font-size: 18px; margin-bottom: 10px; color: var(--text-light); position: relative; z-index: 2; }
         .process-card p { font-size: 14px; color: var(--text-muted-light); position: relative; z-index: 2; font-family: var(--font-body); text-transform: none;}
 
-        .specs-grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 50px; align-items: center; }
-        .spec-box { background: #fff; border: 1px solid #E2E8F0; border-radius: var(--radius-lg); padding: 40px; box-shadow: 0 20px 40px rgba(0,0,0, 0.05); }
-        .spec-price { font-family: var(--font-head); font-size: 42px; font-weight: 700; color: var(--accent); margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #E2E8F0; }
-        .spec-price span { font-family: var(--font-body); font-size: 16px; color: var(--text-muted-dark); font-weight: 400; text-transform: none;}
-        .spec-list { list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; font-family: var(--font-body); text-transform: none;}
-        .spec-list li { font-size: 14px; color: var(--text-dark); }
-        .spec-list li strong { display: block; font-size: 12px; color: var(--text-muted-dark); text-transform: uppercase; margin-bottom: 4px; font-family: var(--font-head);}
-        
-        .promo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
-        .promo-card { border-radius: var(--radius-lg); overflow: hidden; box-shadow: 0 30px 60px rgba(0,0,0,0.8); border: 1px solid rgba(255,255,255,0.05); transition: var(--transition); }
-        .promo-card:hover { transform: translateY(-10px); border-color: rgba(230, 57, 70, 0.3); box-shadow: 0 40px 80px var(--accent-glow); }
-
-        /* НОВЫЙ БЛОК: AVITO ОТЗЫВЫ */
         .avito-grid { display: grid; grid-template-columns: repeat(4, 1fr); grid-auto-rows: 240px; gap: 20px; }
         .avito-item { border-radius: var(--radius-md); overflow: hidden; border: 1px solid #E2E8F0; box-shadow: 0 10px 30px rgba(0,0,0,0.05); transition: var(--transition); background: #fff;}
         .avito-item img { width: 100%; height: 100%; object-fit: cover; transition: 0.8s ease;}
         .avito-item:hover { transform: translateY(-5px); box-shadow: 0 20px 40px rgba(0,0,0,0.1); border-color: var(--accent);}
         .avito-item:hover img { transform: scale(1.03); }
         .avito-item.large { grid-column: span 2; grid-row: span 2; }
+
+        .promo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
+        .promo-card { border-radius: var(--radius-lg); overflow: hidden; box-shadow: 0 30px 60px rgba(0,0,0,0.8); border: 1px solid rgba(255,255,255,0.05); transition: var(--transition); }
+        .promo-card:hover { transform: translateY(-10px); border-color: rgba(230, 57, 70, 0.3); box-shadow: 0 40px 80px var(--accent-glow); }
 
         .footer-cta { text-align: center; max-width: 800px; margin: 0 auto; padding-bottom: 60px; border-bottom: 1px solid rgba(255,255,255,0.05); }
         .contact-grid { display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; margin-top: 40px; }
@@ -176,7 +121,7 @@
         .contact-card i { font-size: 20px; color: var(--accent); }
 
         @media (max-width: 992px) {
-            .fleet-grid, .b2b-offer-grid, .specs-grid, .promo-grid { grid-template-columns: 1fr; }
+            .fleet-grid, .b2b-offer-grid, .promo-grid { grid-template-columns: 1fr; }
             .process-grid { grid-template-columns: 1fr 1fr; }
             .avito-grid { grid-template-columns: repeat(2, 1fr); }
         }
@@ -197,7 +142,7 @@
             <form onsubmit="verifyPassword(event)">
                 <input type="password" id="pwd-input" class="pwd-input" placeholder="PIN" autocomplete="off" required>
                 <div id="pwd-error" class="pwd-error">ОШИБКА ДОСТУПА</div>
-                <button type="submit" class="btn btn-primary" style="width: 100%;">ВОЙТИ</button>
+                <button type="submit" class="btn btn-primary magnet-btn" style="width: 100%;">ВОЙТИ</button>
             </form>
         </div>
     </div>
@@ -220,7 +165,7 @@
                 <h1>Бескомпромиссная защита и эстетика кузова</h1>
                 <p>Ваш автомобиль — это инвестиция. Мы сохраняем первозданный вид ЛКП, защищаем от сколов полиуретаном и придаем зеркальный блеск керамикой. Высший стандарт студии WILLS DETAILS.</p>
                 <div class="hero-actions">
-                    <a href="#contacts" class="btn btn-primary">Связаться с менеджером</a>
+                    <a href="#contacts" class="btn btn-primary magnet-btn">Связаться с менеджером</a>
                 </div>
             </div>
         </section>
@@ -263,14 +208,14 @@
                 </div>
                 <div class="fleet-grid">
                     <div class="fleet-item">
-                        <img src="wrapping-process.jpg" alt="Процесс оклейки авто" onerror="this.src='https://images.unsplash.com/photo-1601362840469-51e4d8d58785?q=80&w=1000&auto=format&fit=crop'">
+                        <img src="/img/wrapping-process.jpg" alt="Процесс оклейки авто" onerror="this.src='https://images.unsplash.com/photo-1601362840469-51e4d8d58785?q=80&w=1000&auto=format&fit=crop'">
                         <div class="fleet-overlay">
                             <h3>Ювелирная точность</h3>
                             <p>Подворот краев без порезов ножом по кузову</p>
                         </div>
                     </div>
                     <div class="fleet-item">
-                        <img src="ceramic-result.jpg" alt="Результат полировки" onerror="this.src='https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?q=80&w=1000&auto=format&fit=crop'">
+                        <img src="/img/ceramic-results.jpg" alt="Результат полировки" onerror="this.src='https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?q=80&w=1000&auto=format&fit=crop'">
                         <div class="fleet-overlay">
                             <h3>Зеркальный блеск</h3>
                             <p>Результат нанесения керамики</p>
@@ -309,7 +254,6 @@
             </div>
         </section>
 
-        <!-- НОВЫЙ БЛОК: AVITO -->
         <section class="section theme-light">
             <div class="container">
                 <div class="section-head">
@@ -318,35 +262,23 @@
                 </div>
                 
                 <div class="avito-grid">
-                    <div class="avito-item large">
-                        <!-- avito1.jpg - Скриншот большого крутого отзыва или главного кейса -->
-                        <img src="avito1.jpg" alt="Отзыв Авито 1" onerror="this.src='https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=800&auto=format&fit=crop'">
-                    </div>
-                    <div class="avito-item">
-                        <img src="avito2.jpg" alt="Отзыв Авито 2" onerror="this.src='https://images.unsplash.com/photo-1580273916550-e323be2ae537?q=80&w=600&auto=format&fit=crop'">
-                    </div>
-                    <div class="avito-item">
-                        <img src="avito3.jpg" alt="Отзыв Авито 3" onerror="this.src='https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?q=80&w=600&auto=format&fit=crop'">
-                    </div>
-                    <div class="avito-item">
-                        <img src="avito4.jpg" alt="Отзыв Авито 4" onerror="this.src='https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?q=80&w=600&auto=format&fit=crop'">
-                    </div>
-                    <div class="avito-item">
-                        <img src="avito5.jpg" alt="Отзыв Авито 5" onerror="this.src='https://images.unsplash.com/photo-1583121274602-3e2820c69888?q=80&w=600&auto=format&fit=crop'">
-                    </div>
+                    <div class="avito-item large"><img src="/img/avito1.jpg" alt="Отзыв 1"></div>
+                    <div class="avito-item"><img src="/img/avito2.jpg" alt="Отзыв 2"></div>
+                    <div class="avito-item"><img src="/img/avito3.jpg" alt="Отзыв 3"></div>
+                    <div class="avito-item"><img src="/img/avito4.jpg" alt="Отзыв 4"></div>
+                    <div class="avito-item"><img src="/img/avito5.jpg" alt="Отзыв 5"></div>
                 </div>
             </div>
         </section>
 
-        <!-- БАННЕРЫ -->
         <section class="section theme-dark">
             <div class="container">
                 <div class="section-head text-center" style="margin: 0 auto 60px; text-align: center;">
                     <h2>АКЦИИ И <span class="text-accent">ПРЕДЛОЖЕНИЯ</span></h2>
                 </div>
                 <div class="promo-grid">
-                    <div class="promo-card"><img src="promo-banner-1.png" alt="Акция 1" onerror="this.src='https://images.unsplash.com/photo-1603584173870-7f23fdae1b7a?q=80&w=800&auto=format&fit=crop'"></div>
-                    <div class="promo-card"><img src="promo-banner-2.png" alt="Акция 2" onerror="this.src='https://images.unsplash.com/photo-1619682817481-e994891cd1f5?q=80&w=800&auto=format&fit=crop'"></div>
+                    <div class="promo-card"><img src="/img/promo-banner-1.jpg" alt="Акция 1"></div>
+                    <div class="promo-card"><img src="/img/promo-banner-2.jpg" alt="Акция 2"></div>
                 </div>
             </div>
         </section>
@@ -356,8 +288,8 @@
                 <div class="footer-cta">
                     <h2>ЗАПИСАТЬСЯ В СТУДИЮ</h2>
                     <div class="contact-grid">
-                        <a href="tel:+79688553323" class="contact-card"><i class="fa-solid fa-phone"></i><div><div style="font-size: 11px; color: var(--text-muted-light); font-family: var(--font-body); text-transform: uppercase;">Телефон</div><div style="font-weight: 600; font-family: var(--font-head);">+7 968 855 3323</div></div></a>
-                        <a href="https://t.me/wills_deatails" target="_blank" class="contact-card"><i class="fa-brands fa-telegram"></i><div><div style="font-size: 11px; color: var(--text-muted-light); font-family: var(--font-body); text-transform: uppercase;">Telegram</div><div style="font-weight: 600; font-family: var(--font-head);">Написать директору</div></div></a>
+                        <a href="tel:+79688553323" class="contact-card magnet-btn"><i class="fa-solid fa-phone"></i><div><div style="font-size: 11px; color: var(--text-muted-light); font-family: var(--font-body); text-transform: uppercase;">Телефон</div><div style="font-weight: 600; font-family: var(--font-head);">+7 968 855 3323</div></div></a>
+                        <a href="https://t.me/wills_deatails" target="_blank" class="contact-card magnet-btn"><i class="fa-brands fa-telegram"></i><div><div style="font-size: 11px; color: var(--text-muted-light); font-family: var(--font-body); text-transform: uppercase;">Telegram</div><div style="font-weight: 600; font-family: var(--font-head);">Написать директору</div></div></a>
                     </div>
                 </div>
                 <div class="copyright" style="font-family: var(--font-body);">© 2026 WILLS DETAILS. Premium Auto Atelier.</div>
@@ -366,6 +298,7 @@
     </main>
 
     <script>
+        // АВТОРИЗАЦИЯ
         function verifyPassword(e) {
             e.preventDefault();
             const pwd = document.getElementById('pwd-input').value;
@@ -408,9 +341,26 @@
                         main.style.display = 'block';
                         main.classList.add('fade-in');
                         document.body.style.overflow = 'auto';
+                        initMagneticButtons(); // Инициализация магнитных кнопок после загрузки
                     }, 600);
                 }
             }, 150);
+        }
+
+        // ЭФФЕКТ МАГНИТНЫХ КНОПОК
+        function initMagneticButtons() {
+            const magnets = document.querySelectorAll('.magnet-btn');
+            magnets.forEach(btn => {
+                btn.addEventListener('mousemove', e => {
+                    const rect = btn.getBoundingClientRect();
+                    const x = e.clientX - rect.left - rect.width / 2;
+                    const y = e.clientY - rect.top - rect.height / 2;
+                    btn.style.transform = `translate(${x * 0.2}px, ${y * 0.2}px)`;
+                });
+                btn.addEventListener('mouseleave', () => {
+                    btn.style.transform = `translate(0px, 0px)`;
+                });
+            });
         }
     </script>
 </body>
