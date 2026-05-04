@@ -212,13 +212,17 @@ def serialize_user(user):
     }
 
 
-def get_all_products():
+def get_all_products(limit=None, offset=0):
     conn = get_db_connection()
-    rows = conn.execute(
-        'SELECT id, name, category, price, description, image_url, badges, created_at FROM products ORDER BY id DESC'
-    ).fetchall()
+    query = 'SELECT id, name, category, price, description, image_url, badges, created_at FROM products ORDER BY id DESC'
+    params = []
+    if limit is not None:
+        query += ' LIMIT ? OFFSET ?'
+        params.extend([max(1, int(limit)), max(0, int(offset))])
+    rows = conn.execute(query, params).fetchall()
+    total = conn.execute('SELECT COUNT(*) as total FROM products').fetchone()['total']
     conn.close()
-    return rows
+    return rows, total
 
 
 def serialize_product(product):
@@ -481,8 +485,19 @@ def upload_image():
 
 @application.route('/api/products', methods=['GET'])
 def get_products():
-    products = get_all_products()
-    return jsonify({'products': [serialize_product(p) for p in products]})
+    limit = request.args.get('limit', default=24, type=int)
+    offset = request.args.get('offset', default=0, type=int)
+    rows, total = get_all_products(limit=limit, offset=offset)
+    products = [serialize_product(p) for p in rows]
+    return jsonify({
+        'products': products,
+        'pagination': {
+            'limit': limit,
+            'offset': offset,
+            'total': total,
+            'has_more': (offset + len(products)) < total
+        }
+    })
 
 
 @application.route('/api/products', methods=['POST'])
@@ -608,6 +623,96 @@ def delete_product(product_id):
 
 
 
+
+
+
+@application.route('/api/recommend-products', methods=['POST'])
+def recommend_products():
+    data = request.json or {}
+    model = (data.get('model') or '').strip()
+    specs = (data.get('specs') or '').strip()
+
+    if not model:
+        return jsonify({'status': 'error', 'message': 'model обязателен'}), 400
+
+    rows, _ = get_all_products(limit=None, offset=0)
+    products = [serialize_product(p) for p in rows]
+    if not products:
+        return jsonify({'status': 'success', 'products': []})
+
+    category_groups = {}
+    for product in products:
+        category_groups.setdefault(product.get('cat') or 'OTHER', []).append(product)
+
+    chosen_candidates = []
+    for category_products in category_groups.values():
+        chosen_candidates.append(category_products[int(uuid.uuid4().hex, 16) % len(category_products)])
+
+    chosen_candidates = chosen_candidates[:12]
+
+    if not OPENROUTER_API_KEY:
+        return jsonify({'status': 'success', 'products': chosen_candidates[:5]})
+
+    compact = [
+        {
+            'id': p['id'],
+            'name': p['name'],
+            'cat': p['cat'],
+            'desc': p['desc'],
+            'price': p['price']
+        }
+        for p in chosen_candidates
+    ]
+
+    prompt = (
+        "Ты авто-эксперт по подбору комплектующих. Выбери максимум 5 товаров из списка. "
+        "Нужен не более 1 товара на категорию. Исключай товары, которые очевидно не подходят под модель. "
+        "Верни только JSON: {\"recommended_ids\":[...]} без комментариев. "
+        f"Модель: {model}. Спецификация: {specs or 'нет данных'}. Товары: {json.dumps(compact, ensure_ascii=False)}"
+    )
+
+    try:
+        response = requests.post(
+            'https://openrouter.ai/api/v1/chat/completions',
+            headers={
+                'Authorization': f'Bearer {OPENROUTER_API_KEY}',
+                'Content-Type': 'application/json',
+                'HTTP-Referer': request.host_url.rstrip('/'),
+                'X-Title': 'WILLI MEDIA Smart Selection'
+            },
+            json={
+                'model': 'openai/gpt-oss-120b:free',
+                'messages':[
+                    {'role': 'system', 'content': 'Ты отвечаешь строго JSON без markdown.'},
+                    {'role': 'user', 'content': prompt}
+                ],
+                'temperature': 0.4,
+                'max_tokens': 250
+            },
+            timeout=25
+        )
+        payload = response.json()
+        raw = (payload.get('choices', [{}])[0].get('message', {}).get('content', '') or '').strip()
+        parsed = json.loads(raw)
+        ids = parsed.get('recommended_ids', []) if isinstance(parsed, dict) else []
+        picked = []
+        used_categories = set()
+        by_id = {p['id']: p for p in chosen_candidates}
+        for pid in ids:
+            product = by_id.get(pid)
+            if not product:
+                continue
+            if product['cat'] in used_categories:
+                continue
+            used_categories.add(product['cat'])
+            picked.append(product)
+            if len(picked) >= 5:
+                break
+        if not picked:
+            picked = chosen_candidates[:5]
+        return jsonify({'status': 'success', 'products': picked})
+    except Exception:
+        return jsonify({'status': 'success', 'products': chosen_candidates[:5]})
 
 
 @application.route('/api/cabinet/register', methods=['POST'])
