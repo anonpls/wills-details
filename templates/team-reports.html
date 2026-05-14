@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WILLS DETAILS | Архитектура Отчетности</title>
+    
+    <!-- Шрифты -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <!-- Иконки -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* =========================================
+           ПРЕМИУМ-ПЕРЕМЕННЫЕ
+           ========================================= */
+        :root {
+            --bg-main: #070709;
+            --bg-glass: rgba(255, 255, 255, 0.03); 
+            --bg-light-block: #ffffff;
+            
+            --accent: #d32f2f;
+            --text-light: #ffffff;
+            --text-dark: #0a0a0a;
+            --text-muted: #888888;
+            
+            --font-head: 'Orbitron', sans-serif;
+            --font-body: 'Inter', sans-serif;
+            
+            --radius-lg: 24px;
+            --radius-md: 16px;
+            --transition: 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        html { scroll-behavior: smooth; }
+        
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-light);
+            font-family: var(--font-body);
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.03'/%3E%3C/svg%3E");
+            min-height: 100vh;
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        .ambient-light {
+            position: fixed; top: -50vh; left: 0; width: 100vw; height: 100vh;
+            background: radial-gradient(ellipse at 50% 50%, rgba(255,255,255,0.06) 0%, transparent 60%);
+            pointer-events: none; z-index: -1;
+        }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #666; }
+
+        #auth-overlay {
+            position: fixed; inset: 0;
+            background: rgba(7, 7, 9, 0.95);
+            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            z-index: 9999;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            transition: opacity var(--transition);
+        }
+        .pin-container { text-align: center; }
+        .pin-title {
+            font-family: var(--font-head); font-size: 24px; letter-spacing: 3px;
+            margin-bottom: 40px; text-transform: uppercase; color: #fff;
+        }
+        .pin-input {
+            background: transparent; border: none; border-bottom: 2px solid rgba(255,255,255,0.2);
+            color: #fff; font-family: var(--font-head); font-size: 42px;
+            width: 180px; text-align: center; letter-spacing: 12px; outline: none; transition: 0.3s;
+        }
+        .pin-input:focus { border-color: #fff; }
+        .pin-error { color: var(--accent); font-size: 12px; margin-top: 20px; opacity: 0; transition: 0.3s; letter-spacing: 1px; text-transform: uppercase; font-weight: 600;}
+
+        #dashboard-content { display: none; padding-bottom: 100px; position: relative; z-index: 2; }
+        .container { width: 92%; max-width: 1400px; margin: 0 auto; }
+
+        header {
+            padding: 40px 0; margin-bottom: 50px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;
+        }
+        .logo-box h1 { font-family: var(--font-head); font-size: 22px; letter-spacing: 2px; text-transform: uppercase; font-weight: 700; color: #fff; }
+        .logo-box p { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; margin-top: 6px; font-weight: 500;}
+        
+        .header-actions { display: flex; align-items: center; gap: 20px; }
+        .current-date { font-family: var(--font-head); font-size: 14px; color: var(--text-muted); letter-spacing: 1px;}
+        
+        .btn {
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: var(--text-light);
+            padding: 12px 24px; border-radius: 8px; font-family: var(--font-body); font-size: 12px; font-weight: 600;
+            text-transform: uppercase; letter-spacing: 1px; cursor: pointer;
+            transition: var(--transition); display: flex; align-items: center; gap: 8px;
+            backdrop-filter: blur(10px);
+        }
+        .btn:hover { background: #fff; color: #000; transform: translateY(-2px); }
+        .btn.edit-active { background: var(--accent); color: #fff; border-color: var(--accent); }
+        .btn.edit-active:hover { background: #b71c1c; }
+
+        .grid { display: grid; grid-template-columns: 1fr; gap: 30px; }
+        @media (min-width: 1024px) { .grid { grid-template-columns: repeat(2, 1fr); align-items: start; } }
+
+        .emp-card {
+            position: relative; border-radius: var(--radius-lg); padding: 1px; 
+            overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1); z-index: 1;
+        }
+        .emp-card:hover { transform: translateY(-5px); }
+        .emp-card::before {
+            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: conic-gradient(from 0deg, transparent 70%, rgba(255,255,255,0.7) 100%);
+            transform-origin: center; opacity: 0.1; transition: opacity 0.3s ease; z-index: -2;
+        }
+        .emp-card:hover::before { opacity: 1; animation: spinBorder 1.2s cubic-bezier(0.4, 0, 0.2, 1) 1 forwards; }
+        @keyframes spinBorder { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .emp-card::after {
+            content: ''; position: absolute; inset: 1px; 
+            background: var(--bg-glass); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border-radius: calc(var(--radius-lg) - 1px); z-index: -1;
+        }
+        
+        .emp-header {
+            padding: 30px 35px; display: flex; justify-content: space-between; align-items: center;
+            cursor: pointer; transition: var(--transition);
+        }
+        .emp-info h2 { font-size: 22px; font-weight: 600; letter-spacing: -0.01em; margin-bottom: 4px; color: #fff; }
+        .emp-info span { font-size: 12px; color: var(--accent); text-transform: uppercase; font-family: var(--font-head); letter-spacing: 1px; font-weight: 600;}
+        .emp-toggle i { transition: transform 0.4s ease; color: var(--text-muted); font-size: 18px; }
+        .emp-card.active .emp-toggle i { transform: rotate(180deg); color: #fff; }
+
+        .emp-body-container { max-height: 0; overflow: hidden; transition: max-height 0.7s cubic-bezier(0.16, 1, 0.3, 1); }
+        .emp-card.active .emp-body-container { max-height: 5000px; }
+        
+        .report-wrapper {
+            background: var(--bg-light-block); color: var(--text-dark);
+            border-radius: var(--radius-md); margin: 0 25px 30px 25px; 
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2); overflow: hidden;
+        }
+        .report-content { padding: 35px; }
+
+        .report-week { margin-bottom: 40px; position: relative; }
+        .report-week:last-child { margin-bottom: 0; }
+        
+        .week-date {
+            display: inline-block; background: #f0f0f0; color: #333;
+            padding: 6px 14px; border-radius: 6px; font-family: var(--font-head); font-size: 11px; letter-spacing: 1px;
+            margin-bottom: 25px; text-transform: uppercase; font-weight: 700;
+        }
+
+        .metrics-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 35px; }
+        .metric-box {
+            background: #ffffff; border: 1px solid rgba(0,0,0,0.06); padding: 20px 15px; border-radius: 12px; transition: var(--transition);
+        }
+        .metric-box:hover { box-shadow: 0 8px 20px rgba(0,0,0,0.04); transform: translateY(-2px); border-color: rgba(0,0,0,0.1); }
+        .metric-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; font-weight: 600; }
+        .metric-val { font-family: var(--font-head); font-size: 24px; font-weight: 700; color: var(--text-dark); }
+        .metric-val.green { color: #10B981; } 
+
+        .elegant-divider { height: 1px; border: none; margin: 30px 0; background: linear-gradient(90deg, transparent, rgba(0,0,0,0.08), transparent); }
+
+        .list-section h4 {
+            font-family: var(--font-head); font-size: 13px; text-transform: uppercase; 
+            letter-spacing: 1px; color: var(--accent); margin-bottom: 20px; display: flex; align-items: center; gap: 8px;
+        }
+        .check-list { list-style: none; }
+        .check-list li { display: flex; align-items: flex-start; gap: 12px; font-size: 14px; line-height: 1.6; margin-bottom: 16px; color: #222; font-weight: 400; }
+        .check-list li:last-child { margin-bottom: 0; }
+        .check-list li i.fa-check { color: #10B981; font-size: 14px; margin-top: 4px; }
+        .check-list li i.fa-arrow-right { color: var(--accent); font-size: 14px; margin-top: 4px; }
+
+        /* =========================================
+           ФОТО В ОТЧЕТАХ И КНОПКИ РЕДАКТИРОВАНИЯ
+           ========================================= */
+        .photos-container {
+            display: flex; flex-direction: column; gap: 20px; margin-bottom: 15px;
+        }
+        .report-photo-block {
+            position: relative;
+            background: #fafafa; border: 1px solid rgba(0,0,0,0.05); padding: 10px; border-radius: 12px;
+        }
+        .report-photo-block img {
+            width: 100%; border-radius: 8px; display: block; margin-bottom: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+        .report-photo-caption {
+            font-size: 13px; color: var(--text-muted); font-style: italic;
+            text-align: center; padding: 0 10px 5px 10px;
+        }
+
+        /* Кнопка "Добавить фото" (Видна только в режиме редактирования) */
+        .add-photo-btn {
+            display: none;
+            width: 100%; padding: 14px; margin-top: 10px;
+            background: rgba(0,0,0,0.02); border: 1px dashed rgba(0,0,0,0.2); border-radius: 8px;
+            color: var(--text-muted); font-size: 13px; font-weight: 600;
+            cursor: pointer; transition: 0.3s;
+        }
+        .add-photo-btn:hover { background: rgba(0,0,0,0.05); border-color: var(--text-dark); color: var(--text-dark); }
+        .add-photo-btn i { margin-right: 5px; }
+
+        /* Кнопка "Удалить фото" (Видна только в режиме редактирования) */
+        .delete-photo-btn {
+            display: none;
+            position: absolute; top: 15px; right: 15px;
+            width: 35px; height: 35px; border-radius: 50%;
+            background: var(--accent); border: none; color: #fff;
+            align-items: center; justify-content: center; cursor: pointer;
+            box-shadow: 0 5px 10px rgba(0,0,0,0.2); transition: 0.2s;
+        }
+        .delete-photo-btn:hover { transform: scale(1.1); background: #b71c1c; }
+
+        /* ЛОГИКА РЕЖИМА РЕДАКТИРОВАНИЯ */
+        body.is-editing .add-photo-btn { display: block; }
+        body.is-editing .delete-photo-btn { display: flex; }
+        body.is-editing .report-photo-block { border-style: dashed; border-color: rgba(211,47,47,0.3); }[contenteditable="true"] {
+            outline: 1px dashed rgba(0, 0, 0, 0.2);
+            padding: 2px 6px; margin: -2px -6px; border-radius: 4px; transition: all 0.2s; cursor: text;
+        }
+        .emp-header [contenteditable="true"] { outline: 1px dashed rgba(255, 255, 255, 0.3); }
+        [contenteditable="true"]:focus { outline: 2px solid var(--accent); background: rgba(211, 47, 47, 0.05); box-shadow: none; }
+
+        /* Тост-уведомление */
+        .toast {
+            position: fixed; bottom: 30px; right: 30px; background: #fff; color: #000;
+            padding: 14px 24px; border-radius: 8px; font-weight: 600; font-size: 13px;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.3); transform: translateY(100px); opacity: 0; transition: var(--transition); z-index: 10000;
+        }
+        .toast.show { transform: translateY(0); opacity: 1; }
+
+        /* =========================================
+           МОБИЛЬНАЯ АДАПТАЦИЯ
+           ========================================= */
+        @media (max-width: 768px) {
+            header { flex-direction: column; text-align: center; gap: 15px; padding: 30px 0; margin-bottom: 30px;}
+            .header-actions { flex-direction: column; width: 100%; gap: 15px; }
+            .btn { width: 100%; justify-content: center; }
+            .grid { gap: 20px; }
+            .emp-header { padding: 20px 25px; }
+            .emp-info h2 { font-size: 18px; }
+            .report-wrapper { margin: 0 15px 20px 15px; border-radius: 12px;}
+            .report-content { padding: 20px; }
+            .metrics-grid { gap: 10px; margin-bottom: 25px; }
+            .metric-box { padding: 15px; border-radius: 8px; }
+            .metric-label { font-size: 10px; }
+            .metric-val { font-size: 18px; }
+            .list-section h4 { font-size: 12px; margin-bottom: 15px; }
+            .check-list li { font-size: 13px; margin-bottom: 12px; }
+            .elegant-divider { margin: 25px 0; }
+            .toast { right: 20px; left: 20px; bottom: 20px; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Скрытый инпут для выбора фото (Один на всю страницу) -->
+    <input type="file" id="global-photo-input" style="display: none;" accept="image/*" onchange="handlePhotoUpload(event)">
+
+    <div class="ambient-light" id="ambientLight"></div>
+
+    <div id="auth-overlay">
+        <div class="pin-container">
+            <div class="pin-title">System Locked</div>
+            <input type="password" id="pin-input" class="pin-input" maxlength="4" placeholder="••••" autocomplete="off">
+            <div id="pin-error" class="pin-error">Access Denied</div>
+        </div>
+    </div>
+
+    <div id="dashboard-content">
+        <header class="container">
+            <div class="logo-box">
+                <h1>WILLS <span style="color:var(--accent);">DETAILS</span></h1>
+                <p>Панель управления руководителя</p>
+            </div>
+            <div class="header-actions">
+                <div class="current-date" id="date-display">18.04.2026</div>
+                <button class="btn" id="edit-btn" onclick="toggleEditMode()">
+                    <i class="fa-solid fa-pen"></i> <span id="edit-text">Редактировать</span>
+                </button>
+            </div>
+        </header>
+
+        <main class="container grid">
+
+            <!-- КАРТОЧКА 1 -->
+            <div class="emp-card">
+                <div class="emp-header" onclick="toggleCard(this)">
+                    <div class="emp-info">
+                        <h2>Максим Цуканов</h2>
+                        <span>Директор по маркетингу</span>
+                    </div>
+                    <div class="emp-toggle"><i class="fa-solid fa-chevron-down"></i></div>
+                </div>
+                
+                <div class="emp-body-container">
+                    <div class="report-wrapper">
+                        <div class="report-content" id="report-1">
+                            <div class="report-week">
+                                <div class="week-date" contenteditable="false">Период: 18.04 - 25.04</div>
+                                
+                                <div class="metrics-grid">
+                                    <div class="metric-box">
+                                        <div class="metric-label">Потрачено бюджета</div>
+                                        <div class="metric-val" contenteditable="false">0 ₽</div>
+                                    </div>
+                                    <div class="metric-box">
+                                        <div class="metric-label">Получено лидов</div>
+                                        <div class="metric-val" contenteditable="false">0 шт</div>
+                                    </div>
+                                    <div class="metric-box">
+                                        <div class="metric-label">Цена лида (CPL)</div>
+                                        <div class="metric-val" contenteditable="false">0 ₽</div>
+                                    </div>
+                                    <div class="metric-box">
+                                        <div class="metric-label">Закрыто в кассу</div>
+                                        <div class="metric-val green" contenteditable="false">0 ₽</div>
+                                    </div>
+                                </div>
+
+                                <hr class="elegant-divider">
+
+                                <div class="list-section">
+                                    <h4><i class="fa-solid fa-bolt"></i> Сделано руками</h4>
+                                    <ul class="check-list" contenteditable="false">
+                                        <li><i class="fa-solid fa-check"></i> Сгенерировано 70 премиум изображений для 10 объявлений Авито. Два объявления - готов топовый дизайн (LiXiang L9, Geely Monjaro).</li>
+                                        <li><i class="fa-solid fa-check"></i> Разработали парсер для сайта. Нашли возможность заполнять нашу БД товарами с чужих сайтов. (Конкретно - с сайта ComfortMat извлекли всю шумку, весь текст, все фото в наше хранилище).</li>
+                                        <li><i class="fa-solid fa-check"></i> Разработан данный раздел сайта для удобного ведения статистики. Любой сотрудник сможет работать прямо здесь, комфортно и четко заполняя статистику.</li>
+                                    </ul>
+                                </div>
+
+                                <hr class="elegant-divider">
+
+                                <div class="list-section">
+                                    <h4><i class="fa-solid fa-crosshairs"></i> Фокус на следующую неделю</h4>
+                                    <ul class="check-list" contenteditable="false">
+                                        <li><i class="fa-solid fa-arrow-right"></i> Запуск кампаний в Яндекс Директ.</li>
+                                        <li><i class="fa-solid fa-arrow-right"></i> Интеграция ТГ-бота для расчета стоимости.</li>
+                                    </ul>
+                                </div>
+
+                                <hr class="elegant-divider">
+
+                                <!-- НОВЫЙ БЛОК ДЛЯ ФОТО -->
+                                <div class="list-section">
+                                    <h4><i class="fa-solid fa-camera"></i> Фотоотчет</h4>
+                                    <div class="photos-container"></div>
+                                    <button class="add-photo-btn" onclick="triggerPhotoUpload(this)"><i class="fa-solid fa-plus"></i> Добавить фото</button>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- КАРТОЧКА 2 -->
+            <div class="emp-card">
+                <div class="emp-header" onclick="toggleCard(this)">
+                    <div class="emp-info">
+                        <h2>Александр В.</h2>
+                        <span>Senior Master (Оклейка)</span>
+                    </div>
+                    <div class="emp-toggle"><i class="fa-solid fa-chevron-down"></i></div>
+                </div>
+                
+                <div class="emp-body-container">
+                    <div class="report-wrapper">
+                        <div class="report-content" id="report-2">
+                            <div class="report-week">
+                                <div class="week-date" contenteditable="false">Период: 18.04 - 25.04</div>
+                                <div class="metrics-grid">
+                                    <div class="metric-box">
+                                        <div class="metric-label">Сдано авто</div>
+                                        <div class="metric-val" contenteditable="false">4 шт</div>
+                                    </div>
+                                    <div class="metric-box">
+                                        <div class="metric-label">Расход пленки</div>
+                                        <div class="metric-val" contenteditable="false">65 м</div>
+                                    </div>
+                                    <div class="metric-box">
+                                        <div class="metric-label">Рекламаций</div>
+                                        <div class="metric-val green" contenteditable="false">0</div>
+                                    </div>
+                                    <div class="metric-box">
+                                        <div class="metric-label">Выработка</div>
+                                        <div class="metric-val" contenteditable="false">85 000 ₽</div>
+                                    </div>
+                                </div>
+                                <hr class="elegant-divider">
+                                <div class="list-section">
+                                    <h4><i class="fa-solid fa-bolt"></i> Выполненные работы</h4>
+                                    <ul class="check-list" contenteditable="false">
+                                        <li><i class="fa-solid fa-check"></i> Полная оклейка BMW X5 (G05) матовым полиуретаном.</li>
+                                        <li><i class="fa-solid fa-check"></i> Зоны риска + керамика на Li L9.</li>
+                                    </ul>
+                                </div>
+
+                                <hr class="elegant-divider">
+
+                                <!-- НОВЫЙ БЛОК ДЛЯ ФОТО -->
+                                <div class="list-section">
+                                    <h4><i class="fa-solid fa-camera"></i> Фотоотчет</h4>
+                                    <div class="photos-container"></div>
+                                    <button class="add-photo-btn" onclick="triggerPhotoUpload(this)"><i class="fa-solid fa-plus"></i> Добавить фото</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- КАРТОЧКА 3 -->
+            <div class="emp-card">
+                <div class="emp-header" onclick="toggleCard(this)">
+                    <div class="emp-info">
+                        <h2>Мастер (имя)</h2>
+                        <span>Специализация</span>
+                    </div>
+                    <div class="emp-toggle"><i class="fa-solid fa-chevron-down"></i></div>
+                </div>
+                
+                <div class="emp-body-container">
+                    <div class="report-wrapper">
+                        <div class="report-content" id="report-3">
+                            <div class="report-week">
+                                <div class="week-date" contenteditable="false">Период: --.-- - --.--</div>
+                                <div class="metrics-grid">
+                                    <div class="metric-box">
+                                        <div class="metric-label">Метрика 1</div>
+                                        <div class="metric-val" contenteditable="false">0</div>
+                                    </div>
+                                    <div class="metric-box">
+                                        <div class="metric-label">Метрика 2</div>
+                                        <div class="metric-val" contenteditable="false">0</div>
+                                    </div>
+                                    <div class="metric-box">
+                                        <div class="metric-label">Метрика 3</div>
+                                        <div class="metric-val green" contenteditable="false">0</div>
+                                    </div>
+                                    <div class="metric-box">
+                                        <div class="metric-label">Метрика 4</div>
+                                        <div class="metric-val" contenteditable="false">0 ₽</div>
+                                    </div>
+                                </div>
+                                <hr class="elegant-divider">
+                                <div class="list-section">
+                                    <h4><i class="fa-solid fa-bolt"></i> Выполненные работы</h4>
+                                    <ul class="check-list" contenteditable="false">
+                                        <li><i class="fa-solid fa-check"></i> (Текст)</li>
+                                    </ul>
+                                </div>
+                                <hr class="elegant-divider">
+                                <div class="list-section">
+                                    <h4><i class="fa-solid fa-camera"></i> Фотоотчет</h4>
+                                    <div class="photos-container"></div>
+                                    <button class="add-photo-btn" onclick="triggerPhotoUpload(this)"><i class="fa-solid fa-plus"></i> Добавить фото</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- КАРТОЧКА 4 -->
+            <div class="emp-card">
+                <div class="emp-header" onclick="toggleCard(this)">
+                    <div class="emp-info">
+                        <h2>Мастер (имя)</h2>
+                        <span>Специализация</span>
+                    </div>
+                    <div class="emp-toggle"><i class="fa-solid fa-chevron-down"></i></div>
+                </div>
+                
+                <div class="emp-body-container">
+                    <div class="report-wrapper">
+                        <div class="report-content" id="report-4">
+                            <div class="report-week">
+                                <div class="week-date" contenteditable="false">Период: --.-- - --.--</div>
+                                <div class="metrics-grid">
+                                    <div class="metric-box">
+                                        <div class="metric-label">Метрика 1</div>
+                                        <div class="metric-val" contenteditable="false">0</div>
+                                    </div>
+                                    <div class="metric-box">
+                                        <div class="metric-label">Метрика 2</div>
+                                        <div class="metric-val" contenteditable="false">0</div>
+                                    </div>
+                                    <div class="metric-box">
+                                        <div class="metric-label">Метрика 3</div>
+                                        <div class="metric-val green" contenteditable="false">0</div>
+                                    </div>
+                                    <div class="metric-box">
+                                        <div class="metric-label">Метрика 4</div>
+                                        <div class="metric-val" contenteditable="false">0 ₽</div>
+                                    </div>
+                                </div>
+                                <hr class="elegant-divider">
+                                <div class="list-section">
+                                    <h4><i class="fa-solid fa-bolt"></i> Выполненные работы</h4>
+                                    <ul class="check-list" contenteditable="false">
+                                        <li><i class="fa-solid fa-check"></i> (Текст)</li>
+                                    </ul>
+                                </div>
+                                <hr class="elegant-divider">
+                                <div class="list-section">
+                                    <h4><i class="fa-solid fa-camera"></i> Фотоотчет</h4>
+                                    <div class="photos-container"></div>
+                                    <button class="add-photo-btn" onclick="triggerPhotoUpload(this)"><i class="fa-solid fa-plus"></i> Добавить фото</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <div id="toast" class="toast">Изменения сохранены!</div>
+
+    <script>
+        const CORRECT_PIN = "7777"; 
+        const pinInput = document.getElementById('pin-input');
+        const authOverlay = document.getElementById('auth-overlay');
+        const dashboard = document.getElementById('dashboard-content');
+        const errorMsg = document.getElementById('pin-error');
+
+        document.getElementById('date-display').innerText = new Date().toLocaleDateString('ru-RU');
+
+        pinInput.addEventListener('input', (e) => {
+            const val = e.target.value;
+            if (val.length === 4) {
+                if (val === CORRECT_PIN) {
+                    authOverlay.style.opacity = '0';
+                    setTimeout(() => {
+                        authOverlay.style.display = 'none';
+                        dashboard.style.display = 'block';
+                        loadReports(); 
+                    }, 500);
+                } else {
+                    errorMsg.style.opacity = '1';
+                    pinInput.style.borderColor = 'var(--accent)';
+                    setTimeout(() => {
+                        pinInput.value = '';
+                        errorMsg.style.opacity = '0';
+                        pinInput.style.borderColor = 'rgba(255,255,255,0.2)';
+                    }, 1000);
+                }
+            }
+        });
+
+        function toggleCard(element) {
+            if (isEditMode) return; 
+            const card = element.parentElement;
+            document.querySelectorAll('.emp-card').forEach(c => {
+                if(c !== card) c.classList.remove('active');
+            });
+            card.classList.toggle('active');
+        }
+
+        let isEditMode = false;
+
+        function toggleEditMode() {
+            isEditMode = !isEditMode;
+            const btn = document.getElementById('edit-btn');
+            const text = document.getElementById('edit-text');
+            const editables = document.querySelectorAll('[contenteditable]');
+            const headers = document.querySelectorAll('.emp-info h2, .emp-info span');
+
+            if (isEditMode) {
+                document.body.classList.add('is-editing'); // Класс для показа кнопок добавления/удаления фото
+                btn.classList.add('edit-active');
+                text.innerText = 'Сохранить отчеты';
+                btn.innerHTML = `<i class="fa-solid fa-save"></i> <span id="edit-text">Сохранить отчеты</span>`;
+                
+                document.querySelectorAll('.emp-card').forEach(c => c.classList.add('active'));
+                editables.forEach(el => el.setAttribute('contenteditable', 'true'));
+                headers.forEach(el => el.setAttribute('contenteditable', 'true'));
+            } else {
+                document.body.classList.remove('is-editing');
+                btn.classList.remove('edit-active');
+                text.innerText = 'Редактировать';
+                btn.innerHTML = `<i class="fa-solid fa-pen"></i> <span id="edit-text">Редактировать</span>`;
+                
+                editables.forEach(el => el.setAttribute('contenteditable', 'false'));
+                headers.forEach(el => el.setAttribute('contenteditable', 'false'));
+                saveReports(); 
+            }
+        }
+
+        /* --- ЛОГИКА ЗАГРУЗКИ ФОТО --- */
+        let currentPhotosContainer = null;
+
+        function triggerPhotoUpload(btn) {
+            // Запоминаем, в какую карточку грузим фото (находим соседний контейнер сверху)
+            currentPhotosContainer = btn.previousElementSibling;
+            document.getElementById('global-photo-input').click();
+        }
+
+        async function handlePhotoUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            showToast("⏳ Загружаем фото на сервер...");
+
+            const formData = new FormData();
+            formData.append('image', file);
+
+            try {
+                const response = await fetch('/api/upload-report-image', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    // Генерируем красивый блок с фото и вставляем его в отчет
+                    const photoHtml = `
+                        <div class="report-photo-block">
+                            <button class="delete-photo-btn" onclick="this.parentElement.remove()" contenteditable="false" title="Удалить фото"><i class="fa-solid fa-trash"></i></button>
+                            <img src="${data.image_url}" alt="Report Photo">
+                            <div class="report-photo-caption" contenteditable="true">Напишите комментарий к фото...</div>
+                        </div>
+                    `;
+                    currentPhotosContainer.insertAdjacentHTML('beforeend', photoHtml);
+                    showToast("✅ Фото успешно добавлено!");
+                } else {
+                    showToast("❌ Ошибка: " + data.message);
+                }
+            } catch (error) {
+                showToast("❌ Ошибка соединения с сервером");
+            }
+
+            event.target.value = ''; // Сбрасываем инпут
+        }
+
+        /* --- СОХРАНЕНИЕ / ЗАГРУЗКА --- */
+        async function saveReports() {
+            const data = {
+                report1: document.getElementById('report-1').innerHTML,
+                h1_name: document.querySelectorAll('.emp-card')[0].querySelector('h2').innerText,
+                h1_role: document.querySelectorAll('.emp-card')[0].querySelector('span').innerText,
+                report2: document.getElementById('report-2').innerHTML,
+                h2_name: document.querySelectorAll('.emp-card')[1].querySelector('h2').innerText,
+                h2_role: document.querySelectorAll('.emp-card')[1].querySelector('span').innerText,
+                report3: document.getElementById('report-3').innerHTML,
+                h3_name: document.querySelectorAll('.emp-card')[2].querySelector('h2').innerText,
+                h3_role: document.querySelectorAll('.emp-card')[2].querySelector('span').innerText,
+                report4: document.getElementById('report-4').innerHTML,
+                h4_name: document.querySelectorAll('.emp-card')[3].querySelector('h2').innerText,
+                h4_role: document.querySelectorAll('.emp-card')[3].querySelector('span').innerText
+            };
+
+            try {
+                const response = await fetch('/api/reports', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                if (response.ok) {
+                    showToast("✅ Отчеты сохранены на сервере!");
+                } else {
+                    showToast("❌ Ошибка сохранения.");
+                }
+            } catch (error) {
+                showToast("❌ Ошибка сети.");
+                console.error(error);
+            }
+        }
+
+        async function loadReports() {
+            try {
+                const response = await fetch('/api/reports');
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    if (data.report1) document.getElementById('report-1').innerHTML = data.report1;
+                    if (data.report2) document.getElementById('report-2').innerHTML = data.report2;
+                    if (data.report3) document.getElementById('report-3').innerHTML = data.report3;
+                    if (data.report4) document.getElementById('report-4').innerHTML = data.report4;
+
+                    const cards = document.querySelectorAll('.emp-card');
+                    if (data.h1_name) { cards[0].querySelector('h2').innerText = data.h1_name; cards[0].querySelector('span').innerText = data.h1_role; }
+                    if (data.h2_name) { cards[1].querySelector('h2').innerText = data.h2_name; cards[1].querySelector('span').innerText = data.h2_role; }
+                    if (data.h3_name) { cards[2].querySelector('h2').innerText = data.h3_name; cards[2].querySelector('span').innerText = data.h3_role; }
+                    if (data.h4_name) { cards[3].querySelector('h2').innerText = data.h4_name; cards[3].querySelector('span').innerText = data.h4_role; }
+                }
+            } catch (error) {
+                console.error("Ошибка загрузки отчетов:", error);
+            }
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.innerText = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+    </script>
+</body>
+</html>

@@ -1,2 +1,4 @@
 .env
+/img/uploads
+cabinet.sqlite3
 /__pycache__

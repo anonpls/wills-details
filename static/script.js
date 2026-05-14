@@ -223,6 +223,13 @@ let productsDB = [
     { id: 106, name: "Набор VAG/BMW клипс", cat: "КРЕПЕЖ", price: 1200, img: "/img/part_6.png", desc: "Профессиональный набор крепежных клипс для дверных карт и обшивки. Незаменимо при разборке салона.", badges: ["OEM Качество", "50 штук"] }
 ];
 
+
+
+const CATALOG_PAGE_SIZE = 12;
+let catalogOffset = 0;
+let hasMoreCatalogProducts = true;
+let isCatalogLoading = false;
+let catalogObserver = null;
 const carBrands = ["BMW X5", "BMW X6", "Li L9", "Zeekr 001", "Porsche Cayenne", "Mercedes G-Class"];
 const carDB = {
     "bmw x5": { img: "/img/car_bmw_x5.webp", specs: "G05 • 3.0D / 4.4i • M-Sport" },
@@ -264,8 +271,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     checkDailyBonus();   
     updatePointsUI();
     updateCartUI();
-    await loadProductsFromServer();  // Ждем загрузки товаров
-    renderGrids();  // Теперь currentUser инициализирован
+    await loadProductsFromServer({ reset: true });  // Ждем загрузки товаров
+    renderGrids();
+    initCatalogLazyLoad();  // Теперь currentUser инициализирован
     renderHomeCatalog();
     initSmartSelection();
     initSmartSelection();
@@ -730,18 +738,49 @@ function initDatalist() {
     }
 }
 
-async function loadProductsFromServer() {
+async function loadProductsFromServer({ reset = false, limit = CATALOG_PAGE_SIZE } = {}) {
+    if (isCatalogLoading) return;
+    if (reset) {
+        catalogOffset = 0;
+        hasMoreCatalogProducts = true;
+        productsDB = [];
+    }
+    if (!hasMoreCatalogProducts) return;
+
+    isCatalogLoading = true;
     try {
-        const response = await fetch('/api/products');
+        const response = await fetch(`/api/products?limit=${limit}&offset=${catalogOffset}`);
         if (response.ok) {
             const data = await response.json();
-            if (data.products && data.products.length > 0) {
-                productsDB = data.products;
-            }
+            const incoming = Array.isArray(data.products) ? data.products : [];
+            productsDB = reset ? incoming : [...productsDB, ...incoming];
+            catalogOffset += incoming.length;
+            hasMoreCatalogProducts = Boolean(data.pagination?.has_more);
         }
     } catch (error) {
         console.log('Ошибка при загрузке товаров:', error);
+    } finally {
+        isCatalogLoading = false;
     }
+}
+
+function initCatalogLazyLoad() {
+    const grid = document.getElementById('catalogGrid');
+    if (!grid) return;
+
+    const sentinel = document.createElement('div');
+    sentinel.id = 'catalogLoadSentinel';
+    sentinel.style.height = '1px';
+    grid.parentElement.appendChild(sentinel);
+
+    if (catalogObserver) catalogObserver.disconnect();
+    catalogObserver = new IntersectionObserver(async (entries) => {
+        if (!entries[0].isIntersecting || !hasMoreCatalogProducts || isCatalogLoading) return;
+        await loadProductsFromServer();
+        renderGrids();
+    }, { rootMargin: '300px' });
+
+    catalogObserver.observe(sentinel);
 }
 
 function openAddProductModal() {
@@ -938,7 +977,7 @@ async function submitAddProduct() {
         if (response.ok && data.status === 'success') {
             showToast('Товар успешно добавлен!', 'success', 'fa-check');
             closeAddProductModal();
-            await loadProductsFromServer();
+            await loadProductsFromServer({ reset: true, limit: Math.max(CATALOG_PAGE_SIZE, catalogOffset || CATALOG_PAGE_SIZE) });
             renderGrids();
             renderHomeCatalog();
         } else {
@@ -1014,7 +1053,7 @@ async function submitEditProduct() {
         if (response.ok && data.status === 'success') {
             showToast('Товар успешно обновлен!', 'success', 'fa-check');
             closeEditProductModal();
-            await loadProductsFromServer();
+            await loadProductsFromServer({ reset: true, limit: Math.max(CATALOG_PAGE_SIZE, catalogOffset || CATALOG_PAGE_SIZE) });
             renderGrids();
             renderHomeCatalog();
         } else {
@@ -1048,7 +1087,7 @@ async function deleteProduct(productId) {
 
         if (response.ok && data.status === 'success') {
             showToast('Товар удален', 'success', 'fa-check');
-            await loadProductsFromServer();
+            await loadProductsFromServer({ reset: true, limit: Math.max(CATALOG_PAGE_SIZE, catalogOffset || CATALOG_PAGE_SIZE) });
             renderGrids();
             renderHomeCatalog();
         } else {
@@ -1188,15 +1227,37 @@ async function fetchWikidataImage(modelName) {
     return null;
 }
 
-function renderConfiguratorParts(parts) {
+function renderConfiguratorParts(parts, recommendedProducts = null) {
+    const sourceProducts = Array.isArray(recommendedProducts) && recommendedProducts.length
+        ? recommendedProducts
+        : productsDB.slice(0, 3);
     parts.innerHTML = '';
-    productsDB.slice(0, 3).forEach(p => {
+    sourceProducts.slice(0, 5).forEach(p => {
         parts.innerHTML += `
             <div style="display:flex; justify-content:space-between; align-items:center; padding: 20px 0; border-bottom: 1px solid var(--border-color);">
                 <div><div style="font-weight:500; font-size:14px;">${p.name}</div><div style="color:var(--text-main); font-size:13px; font-weight:600;">${p.price.toLocaleString()} ₽</div></div>
                 <button onclick="handleConfiguratorAdd(this, '${p.name}', ${p.price})" class="config-plus-btn"><i class="fa-solid fa-plus"></i></button>
             </div>`;
     });
+}
+
+
+async function fetchRecommendedProducts(modelName, modelSpecs = '') {
+    try {
+        const response = await fetch('/api/recommend-products', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ model: modelName, specs: modelSpecs })
+        });
+        const data = await response.json();
+        if (!response.ok || data.status !== 'success') {
+            throw new Error(data.message || 'recommend failed');
+        }
+        return Array.isArray(data.products) ? data.products : [];
+    } catch (error) {
+        console.error('Ошибка рекомендаций:', error);
+        return [];
+    }
 }
 
 async function fetchModelSummary(modelName, specs = '') {
@@ -1246,7 +1307,8 @@ async function searchCar() {
             img.src = car.img;
             title.textContent = key.toUpperCase();
             specs.textContent = car.specs;
-            renderConfiguratorParts(parts);
+            const aiRecommended = await fetchRecommendedProducts(wikiResult.title, wikiResult.specs);
+            renderConfiguratorParts(parts, aiRecommended);
             await fetchModelSummary(title.textContent, car.specs);
             showToast('Комплектующие найдены', 'success', 'fa-check-double');
             return;
@@ -1257,7 +1319,8 @@ async function searchCar() {
             img.src = wikiResult.image;
             title.textContent = wikiResult.title.toUpperCase();
             specs.textContent = wikiResult.specs;
-            renderConfiguratorParts(parts);
+            const aiRecommended = await fetchRecommendedProducts(wikiResult.title, wikiResult.specs);
+            renderConfiguratorParts(parts, aiRecommended);
             await fetchModelSummary(wikiResult.title, wikiResult.specs);
             showToast('Комплектующие найдены', 'success', 'fa-check-double');
             return;
