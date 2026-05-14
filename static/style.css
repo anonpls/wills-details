@@ -1204,3 +1204,150 @@ a:hover, button:hover, .product-card:hover, .logo:hover, .nav-link:hover, .theme
         grid-auto-columns: minmax(240px, 85vw);
     }
 }
+
+/* =========================================
+   PREMIUM SERVICES OVERHAUL
+   ========================================= */
+
+/* Бейдж "ХИТ ПРОДАЖ" на карточках */
+.badge-hit {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    background: var(--accent);
+    color: #fff;
+    padding: 6px 12px;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    border-radius: 4px;
+    z-index: 10;
+    text-transform: uppercase;
+    box-shadow: 0 5px 15px rgba(211, 47, 47, 0.4);
+}
+
+/* Обертка для цен с перечеркиванием */
+.product-price-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.old-price {
+    font-size: 13px;
+    color: var(--text-muted);
+    text-decoration: line-through;
+    font-weight: 400;
+}
+.new-price {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+/* Принудительная пропорция фото в услугах 4:3 */
+.service-card .product-image {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    height: auto;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 20px;
+}
+.service-card .product-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    max-width: 100%;
+}
+
+/* Стилизация премиального описания (Telegram Style) внутри модалки */
+.premium-desc {
+    font-family: 'Inter', sans-serif;
+    color: var(--text-main);
+}
+.premium-desc h4 {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 15px;
+    line-height: 1.4;
+    letter-spacing: -0.02em;
+}
+.premium-desc p {
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--text-muted);
+    margin-bottom: 20px;
+}
+.premium-features {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 25px 0;
+    background: rgba(0, 0, 0, 0.02);
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid var(--border-color);
+}
+[data-theme="dark"] .premium-features {
+    background: rgba(255, 255, 255, 0.02);
+}
+.premium-features li {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 15px;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.5;
+}
+.premium-features li:last-child {
+    margin-bottom: 0;
+}
+.premium-features li i {
+    color: var(--accent);
+    font-size: 16px;
+    margin-top: 2px;
+    width: 20px;
+    text-align: center;
+}
+.summary-text {
+    font-size: 15px !important;
+    font-weight: 600;
+    color: var(--text-main) !important;
+    border-left: 3px solid var(--accent);
+    padding-left: 15px;
+    margin-top: 20px;
+}
+
+/* Красивая кнопка скачивания PDF */
+.pdf-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    padding: 16px 0;
+    background: rgba(0, 0, 0, 0.05);
+    color: var(--text-main);
+    text-decoration: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    border: 1px solid var(--border-color);
+    transition: all var(--transition-fast);
+}
+[data-theme="dark"] .pdf-btn {
+    background: rgba(255, 255, 255, 0.05);
+}
+.pdf-btn:hover {
+    background: var(--text-main);
+    color: var(--bg-main);
+    border-color: var(--text-main);
+    transform: translateY(-2px);
+}
+.pdf-btn i {
+    font-size: 18px;
+    color: #e53935; /* Красный цвет PDF */
+}
+.pdf-btn:hover i {
+    color: var(--bg-main);
+}

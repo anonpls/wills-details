@@ -4,16 +4,214 @@
 
 /* --- БАЗА ДАННЫХ: УСЛУГИ (Из Авито) --- */
 const servicesDB = [
-    { id: "noise", name: "Полная шумоизоляция", price: "от 12 000 ₽", shortDesc: "Автомобиля / дверей", fullDesc: "Комплексная шумоизоляция автомобиля или дверей. Убираем гул, скрипы и вибрации. Используем премиальные материалы (Legenda, Relief).", img: "/img/main_1.png", badges: ["Тишина в салоне", "Premium материалы"] },
-    { id: "tint", name: "Тонировка стекол", price: "от 1 500 ₽", shortDesc: "Приватность и защита", fullDesc: "Тонировка стекол автомобиля качественными пленками. Защита от УФ-лучей, комфорт для зрения и приватность.", img: "/img/main_2.png", badges: ["Защита от УФ", "Идеальная видимость"] },
-    { id: "audio", name: "Автозвук / Акустика", price: "от 1 500 ₽", shortDesc: "Установка акустики", fullDesc: "Профессиональная установка акустики, сабвуферов, усилителей. Настройка сцены для идеального звучания.", img: "/img/main_3.png", badges: ["Чистый звук", "Комплекс услуг"] },
-    { id: "doors", name: "Установка доводчиков", price: "от 10 000 ₽", shortDesc: "Доводчики дверей на авто", fullDesc: "Установка премиальных доводчиков дверей. Плавное и бесшумное закрытие. Сохранение заводской гарантии.", img: "/img/main_4.png", badges: ["Премиальный комфорт", "Честные цены"] },
-    { id: "ambient", name: "Подсветка салона", price: "от 10 000 ₽", shortDesc: "Установка контурной подсветки", fullDesc: "Контурная подсветка салона. Управление с телефона, множество цветов. Полностью преобразит салон вашего авто.", img: "/img/main_5.png", badges: ["Smart управление", "Интеграция"] },
-    { id: "sim", name: "Пайка SIM-карт", price: "от 10 000 ₽", shortDesc: "LiXiang, Zeekr, Voyah", fullDesc: "Профессиональная пайка и установка российских SIM-карт в китайские автомобили (LiXiang, Zeekr, Voyah и др.).", img: "/img/main_6.png", badges: ["Интернет в авто", "Гарантия"] },
-    { id: "steering", name: "Перетяжка руля", price: "от 4 000 ₽", shortDesc: "Ощущение новой машины", fullDesc: "Перетяжка руля премиальной кожей, наппой или алькантарой. Идеальные швы и заводское качество.", img: "/img/main_7.png", badges: ["Натуральная кожа", "Ручная работа"] },
-    { id: "polish", name: "Полировка", price: "от 5 000 ₽", shortDesc: "Полировка фар и кузова", fullDesc: "Профессиональная полировка кузова и оптики. Восстановление прозрачности фар и блеска лакокрасочного покрытия.", img: "/img/main_8.png", badges: ["Глубокий блеск", "Удаление царапин"] },
-    { id: "wrap", name: "Оклейка авто пленкой", price: "от 35 000 ₽", shortDesc: "Защита кузова полиуретаном", fullDesc: "Оклейка зон риска или кузова целиком антигравийной полиуретановой пленкой. Защита от сколов и царапин.", img: "/img/main_1.webp", badges: ["Полиуретан 200мкр", "Самовосстановление"] }
+    { 
+        id: "noise_full", 
+        name: "Полная шумоизоляция", 
+        price: "от 60 000 ₽", 
+        oldPrice: "75 000 ₽",
+        shortDesc: "Эффект акустической капсулы", 
+        isHit: true,
+        hitLabel: "ХИТ ПРОДАЖ",
+        hasPDF: true,
+        img: "/img/шумка_ПОДКЛЮЧ.jpg", 
+        badges: ["Тишина в салоне", "AeroCell + Noise block"],
+        fullDesc: `
+            <div class="premium-desc">
+                <h4>Минутка физики: кузов авто — это мембрана</h4>
+                <p>Вы едете по асфальту, подвеска передает вибрацию на тонкий металл пола и арок. Металл вибрирует и работает как гигантский динамик прямо вам в уши. Этот гул утомляет нервную систему быстрее, чем пробки.</p>
+                <p>Мы предлагаем <strong>Полный антишум под ключ</strong>. Укатываем пол, арки, двери, багажник и торпедо материалами STP Premium. Это не легкая китайская пенка, это тяжелая, плотная шумка, которая гасит резонанс физической массой.</p>
+                <ul class="premium-features">
+                    <li><i class="fa-solid fa-ear-listen"></i> <span>Снижение общего шума до 40-50%</span></li>
+                    <li><i class="fa-solid fa-wind"></i> <span>Можно говорить шепотом на 130 км/ч</span></li>
+                    <li><i class="fa-solid fa-music"></i> <span>Музыка звучит без искажений</span></li>
+                </ul>
+                <p class="summary-text">Вы садитесь, закрываете дверь — и город пропадает.</p>
+            </div>
+        `
+    },
+    { 
+        id: "noise_doors", 
+        name: "Шумоизоляция дверей", 
+        price: "от 12 000 ₽", 
+        oldPrice: "16 000 ₽",
+        shortDesc: "4 слоя. Акустика + боковой шум", 
+        isHit: true,
+        hitLabel: "ЧАСТЫЙ ВЫБОР",
+        hasPDF: true,
+        img: "/img/шумка_ДВЕРИ_в4слоя.jpg", 
+        badges: ["Глухой хлопок двери", "Улучшение автозвука"],
+        fullDesc: `
+            <div class="premium-desc">
+                <h4>Превращаем дверь из консервной банки в закрытый короб</h4>
+                <p>Базовая процедура, с которой стоит начать. Мы используем 4 слоя премиальных материалов (Aerosel 6, Legenda, Relief), чтобы полностью убрать дребезг металла и пластика.</p>
+                <ul class="premium-features">
+                    <li><i class="fa-solid fa-car-side"></i> <span>Соседние машины в потоке перестают гудеть над ухом</span></li>
+                    <li><i class="fa-solid fa-shield-halved"></i> <span>Двери закрываются с благородным глухим хлопком</span></li>
+                    <li><i class="fa-solid fa-compact-disc"></i> <span>Штатная музыка находит потерянные басы</span></li>
+                </ul>
+                <p class="summary-text">Дверь становится монолитной, уходят все сверчки и скрипы салонного пластика.</p>
+            </div>
+        `
+    },
+    { 
+        id: "noise_arches", 
+        name: "Шумоизоляция арок", 
+        price: "от 18 000 ₽", 
+        oldPrice: "22 000 ₽",
+        shortDesc: "Убираем гул от колес и трассы", 
+        hasPDF: true,
+        img: "/img/шумка_АРКИ.jpg", 
+        badges: ["-50% гула колес", "Толстая мастика"],
+        fullDesc: `
+            <div class="premium-desc">
+                <h4>Основной источник головной боли — устранен</h4>
+                <p>Колесные арки — самое уязвимое место любого современного авто. Шум от шипов, шершавого асфальта и луж передается напрямую в салон. Мы укатываем металл толстым слоем виброизоляции и специальной мастики.</p>
+                <ul class="premium-features">
+                    <li><i class="fa-solid fa-road"></i> <span>Сразу уходит мерзкий гул от шипов и стыков</span></li>
+                    <li><i class="fa-solid fa-water"></i> <span>Не слышно ударов воды и камней по кузову</span></li>
+                    <li><i class="fa-solid fa-stopwatch"></i> <span>Мастхэв для тех, кто много ездит по трассе</span></li>
+                </ul>
+            </div>
+        `
+    },
+    { 
+        id: "doors_closer", 
+        name: "Установка доводчиков", 
+        price: "от 10 000 ₽", 
+        oldPrice: "15 000 ₽",
+        shortDesc: "Плавное закрытие без хлопков", 
+        isHit: true,
+        hitLabel: "ПРЕМИУМ КОМФОРТ",
+        img: "/img/Оклейка_Пленкой.jpg", // Замените на фото доводчиков, если появится
+        badges: ["Сохранение гарантии", "Бесшумный замок"],
+        fullDesc: `
+            <div class="premium-desc">
+                <h4>Ощущение автомобиля классом выше</h4>
+                <p>Забудьте о необходимости хлопать дверями со всей силы. Премиальные доводчики плавно и бесшумно притягивают дверь до полного закрытия.</p>
+                <ul class="premium-features">
+                    <li><i class="fa-solid fa-check"></i> <span>Установка pin-to-pin без сверления кузова</span></li>
+                    <li><i class="fa-solid fa-check"></i> <span>Сохранение заводской дилерской гарантии</span></li>
+                    <li><i class="fa-solid fa-check"></i> <span>Безопасность для детей (защита от защемления)</span></li>
+                </ul>
+            </div>
+        `
+    },
+    { 
+        id: "wrap_ppf", 
+        name: "Оклейка полиуретаном", 
+        price: "от 35 000 ₽", 
+        oldPrice: "50 000 ₽",
+        shortDesc: "Броня для вашего кузова", 
+        isHit: true,
+        hitLabel: "ИНВЕСТИЦИЯ В АВТО",
+        img: "/img/Оклейка_Пленкой.jpg", 
+        badges: ["Полиуретан 200 мкр", "Самовосстановление"],
+        fullDesc: `
+            <div class="premium-desc">
+                <h4>Ваша машина всегда выглядит как из автосалона</h4>
+                <p>Единственный рабочий способ защитить кузов от сколов, пескоструя, притертостей на парковке и химии на мойках. Мы используем только топовый полиуретан толщиной 200 микрон, который не желтеет и обладает свойством самозаживления царапин на солнце.</p>
+                <ul class="premium-features">
+                    <li><i class="fa-solid fa-gem"></i> <span>Глубокий леденцовый блеск кузова</span></li>
+                    <li><i class="fa-solid fa-shield"></i> <span>Защита зон риска (капот, бампер, фары, зеркала)</span></li>
+                    <li><i class="fa-solid fa-money-bill-trend-up"></i> <span>Сохраняет стоимость авто при перепродаже</span></li>
+                </ul>
+                <p class="summary-text">Дешевле оклеить пленкой сейчас, чем перекрашивать капот через год.</p>
+            </div>
+        `
+    },
+    { 
+        id: "tint", 
+        name: "Тонировка стекол", 
+        price: "от 1 500 ₽", 
+        shortDesc: "Приватность и защита от солнца", 
+        img: "/img/тонировка_АВТО.jpg", 
+        badges: ["Защита от УФ", "Идеальная видимость"],
+        fullDesc: `
+            <div class="premium-desc">
+                <h4>Стиль, комфорт и защита салона</h4>
+                <p>Тонировка стекол автомобиля качественными металлизированными и керамическими пленками. Салон меньше нагревается летом, а кожа и пластик защищены от выгорания.</p>
+            </div>
+        `
+    },
+    { 
+        id: "polish", 
+        name: "Полировка", 
+        price: "от 5 000 ₽", 
+        shortDesc: "Восстановление блеска", 
+        img: "/img/Полировка_АВТО.jpg", 
+        badges: ["Глубокий блеск", "Удаление царапин"],
+        fullDesc: `
+            <div class="premium-desc">
+                <h4>Зеркальное отражение вашего авто</h4>
+                <p>Профессиональная восстановительная и легкая полировка кузова. Убираем "паутинку", голограммы и мелкие царапины, возвращая лаку заводскую прозрачность.</p>
+            </div>
+        `
+    },
+    { 
+        id: "ambient", 
+        name: "Подсветка салона", 
+        price: "от 10 000 ₽", 
+        shortDesc: "Контурная Ambient-подсветка", 
+        img: "/img/подсветка_САЛОН.jpg", 
+        badges: ["Управление со смартфона", "Сотни цветов"],
+        fullDesc: `
+            <div class="premium-desc">
+                <h4>Новая атмосфера в салоне</h4>
+                <p>Интеграция контурной подсветки (Ambient light) в дверные карты, торпедо и зону ног. Управление цветом и яркостью прямо с вашего телефона. Выглядит как штатная опция премиум-класса.</p>
+            </div>
+        `
+    },
+    { 
+        id: "steering", 
+        name: "Перетяжка руля", 
+        price: "от 4 000 ₽", 
+        shortDesc: "Тактильный восторг", 
+        img: "/img/Перетяжка_РУЛЬ.jpg", 
+        badges: ["Итальянская Nappa", "Заводской шов"],
+        fullDesc: `
+            <div class="premium-desc">
+                <h4>Ощущение новой машины в руках</h4>
+                <p>Руль — это то, с чем вы контактируете 100% времени за рулем. Перетяжка премиальной кожей (Nappa), алькантарой или экокожей с сохранением подогрева и идеальным заводским швом макраме.</p>
+            </div>
+        `
+    }
 ];
+
+/* --- ОБНОВЛЕННАЯ ФУНКЦИЯ РЕНДЕРИНГА УСЛУГ --- */
+function renderGrids() {
+    const servGrid = document.getElementById('servicesGrid');
+    if (servGrid) {
+        servGrid.innerHTML = '';
+        servicesDB.forEach((s, index) => {
+            const hitBadge = s.isHit ? `<div class="badge-hit">${s.hitLabel || 'ХИТ'}</div>` : '';
+            const priceHtml = s.oldPrice 
+                ? `<span class="old-price">${s.oldPrice}</span> <span class="new-price">${s.price}</span>` 
+                : `<span class="new-price">${s.price}</span>`;
+
+            servGrid.innerHTML += `
+                <div class="product-card service-card reveal delay-${(index % 3) + 1}">
+                    ${hitBadge}
+                    <div class="product-image" onclick="openDetailModal('service', '${s.id}')">
+                        <img src="${s.img}" alt="${s.name}" onerror="this.src='https://via.placeholder.com/1600x1200/111111/555555?text=WILLI+MEDIA'">
+                    </div>
+                    <div class="product-meta" style="width: 100%; text-align: left; align-items: flex-start;">
+                        <h3 class="product-title" style="font-size: 18px; margin-bottom: 8px;">${s.name}</h3>
+                        <p class="product-desc" style="max-width: 100%; margin-bottom: 15px;">${s.shortDesc}</p>
+                        <div class="product-price-wrapper" style="margin-top: auto;">
+                            ${priceHtml}
+                        </div>
+                    </div>
+                    <div class="product-action">
+                        <button class="add-cart-btn" onclick="openDetailModal('service', '${s.id}')">Узнать подробнее</button>
+                    </div>
+                </div>`;
+        });
+    }
+
+    // Рендер каталога оставляем без изменений (из вашего кода)
+    const catGrid = document.getElementById('catalogGrid');
+    // ... остальной код renderGrids для товаров ...
+}
 
 /* --- БАЗА ДАННЫХ: ТОВАРЫ (Шумка, спирт, клипсы) --- */
 let productsDB = [
@@ -330,6 +528,7 @@ function openDetailModal(type, id) {
     const desc = document.getElementById('dmDesc');
     const btn = document.getElementById('dmBtn');
     
+    // Очищаем старые бейджи и кнопки PDF
     let badgesContainer = document.getElementById('dmBadges');
     if (!badgesContainer) {
         badgesContainer = document.createElement('div');
@@ -340,31 +539,56 @@ function openDetailModal(type, id) {
         badgesContainer.style.marginBottom = '25px';
         desc.parentNode.insertBefore(badgesContainer, desc);
     }
+    
+    let pdfBtnWrapper = document.getElementById('dmPdfWrapper');
+    if(pdfBtnWrapper) pdfBtnWrapper.remove();
 
     let item = type === 'service' ? servicesDB.find(s => s.id === id) : productsDB.find(p => p.id === id);
     if (!item) return;
 
     img.src = item.img || '';
-    img.onerror = () => img.src = 'https://via.placeholder.com/600x600/f4f5f7/cccccc?text=FOTO';
+    img.onerror = () => img.src = 'https://via.placeholder.com/1600x1200/111111/555555?text=WILLI+MEDIA';
     title.innerText = item.name;
-    title.style.fontFamily = 'var(--font-head)';
-    price.innerText = item.price.toLocaleString ? item.price.toLocaleString() + ' ₽' : item.price;
-    price.style.color = "var(--text-main)";
+    
+    // Форматирование цены со скидкой
+    if(item.oldPrice) {
+        price.innerHTML = `<span style="text-decoration: line-through; color: #888; font-size: 16px; margin-right: 10px;">${item.oldPrice}</span> <span style="color: var(--accent);">${item.price}</span>`;
+    } else {
+        price.innerText = item.price.toLocaleString ? item.price.toLocaleString() + ' ₽' : item.price;
+        price.style.color = "var(--text-main)";
+    }
+    
     desc.innerHTML = item.fullDesc || item.desc; 
     
     badgesContainer.innerHTML = '';
     if (item.badges) {
         item.badges.forEach((bText, i) => {
             const isSuccess = i % 2 === 0;
-            badgesContainer.innerHTML += `<div class="ui-badge ${isSuccess ? 'success' : 'accent'}"><i class="fa-solid ${isSuccess ? 'fa-check-double' : 'fa-star'}"></i> ${bText}</div>`;
+            badgesContainer.innerHTML += `<div class="ui-badge ${isSuccess ? 'dark' : 'accent'}"><i class="fa-solid ${isSuccess ? 'fa-check-double' : 'fa-star'}"></i> ${bText}</div>`;
         });
     }
 
+    // ДОБАВЛЕНИЕ КНОПКИ PDF ДЛЯ ШУМОИЗОЛЯЦИИ
+    if (item.hasPDF) {
+        pdfBtnWrapper = document.createElement('div');
+        pdfBtnWrapper.id = 'dmPdfWrapper';
+        pdfBtnWrapper.style.marginBottom = '20px';
+        pdfBtnWrapper.innerHTML = `
+            <a href="/Wills_Details_Price_List.pdf" target="_blank" class="pdf-btn">
+                <i class="fa-solid fa-file-pdf"></i> Скачать полный прайс-лист (PDF)
+            </a>
+        `;
+        btn.parentNode.insertBefore(pdfBtnWrapper, btn);
+    }
+
     if (type === 'service') {
-        btn.innerText = "ЗАПИСАТЬСЯ";
+        btn.innerHTML = 'ЗАПИСАТЬСЯ НА КОНСУЛЬТАЦИЮ <i class="fa-brands fa-telegram" style="margin-left:8px;"></i>';
+        btn.className = "btn btn-primary"; // Возвращаем класс красивой кнопки
+        btn.style.width = "100%";
         btn.onclick = () => window.open('https://t.me/wills_deatails', '_blank');
     } else {
         btn.innerText = "В КОРЗИНУ";
+        btn.className = "add-cart-btn";
         btn.onclick = () => { addToCart(item.name, item.price); closeDetailModal(); };
     }
     modal.classList.add('active');
